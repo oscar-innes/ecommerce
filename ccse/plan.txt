@@ -1,0 +1,20 @@
+HTML first, lets make a good frontend with the icons needed for the frontend., maybe test functionality of passing info into the system.
+Layered out in the way the website should be.
+Then we do the functionality, make everything work whilst being secure. Document this process as we go (report starts at this stage)
+CSS LAST CAUSE BOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+
+we discoveered we need additional properties enabled for it to work,
+so fix schemas 
+
+
+
+
+
+
+backend work to do:
+- order status and delivery info gets updated and the image changes (but is this more frontend?).
+- stripe payments maybe.
+
+once this is done we push on with frontend over crimbo, anything else we can add later as most things are not neccessary otherwise.
+

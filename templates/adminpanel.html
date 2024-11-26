@@ -1,0 +1,120 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>Home</title> 
+<section class="adminlogin">
+<h1>Admin Panel </h1>
+
+
+<h1> Welcome to the Admin Portal {{ username }} </h1>
+
+
+{{  Update_Message }}
+
+<body>
+
+<div class="button-container">
+    <div class="add_product">
+        <form method="post" action="{% url 'add_product' %}">
+            {% csrf_token %}
+            <input type="text" name="productname" placeholder="Product Name:" required><br>
+            <input type="text" name="imagefilename" placeholder="image name (include .png/jpg):" required> <br>
+            <input type="text" name="productstock" placeholder="Current Stock" required><br>
+            <input type="number" name = "productprice" id="productprice" 
+            name="price" min="0" 
+            max="4000" step="0.01" placeholder="Product Price:" required> <br>
+            <input type="text" name="productdesc" placeholder="Product Description" required><br>
+            <button type="submit" class="add-product-button" role="button" required><span class="text">Add new Product</span>
+        </form>
+    </div>
+    
+    <div class="delete-element">
+        <form method="post" action="{% url 'delete_file' %}">
+            {% csrf_token %}
+            <input type="text" name="delproductname" placeholder="File To Delete" required><br>
+            <select name="sommat" id="sommat">
+                <option value="Products">Delete a Product</option>
+                <option value="Logins">Delete a User</option>
+            </select>
+            <button type="submit" class="delete-product" role="button" required><span class="text">Delete a Element of the system</span>
+        </form>
+    </div>
+
+
+    <div class="change-role">
+        <form method="post" action="{% url 'change_role' %}">
+            {% csrf_token %}
+            <input type="text" name="changeuser" placeholder="Username" required><br>
+            <select name="something" id="something">
+                <option value="customer">customer</option>
+                <option value="moderator">moderator</option>
+                <option value="admin">admin</option>
+            </select>
+            <button type="submit" class="change-role" role="button" required><span class="text">Change role of a user.</span>
+        </form>
+    </div>
+    todo
+    <div class="update-order">
+        <form method="post" action="{% url 'order_status_change' %}">
+            {% csrf_token %}
+            <input type="text" name="changeuser" placeholder="Username" required><br>
+            <select name="something" id="something">
+                <option value="customer">customer</option>
+                <option value="moderator">moderator</option>
+                <option value="admin">admin</option>
+            </select>
+            <button type="submit" class="change-role" role="button" required><span class="text">Change role of a user.</span>
+        </form>
+    </div>
+    
+    <div class="add_stock">
+        <form method="post" action="{% url 'add_stock' %}">
+            {% csrf_token %}
+            <input type="text" name="productname" placeholder="Product to update" required><br>
+            <input type="number" name = "stocknumber" placeholder="Stock to add" required>
+            <button type="submit" class="update-product" role="button" required><span class="text">Add stock to a product:</span>
+        </form>
+    </div>
+
+
+
+
+    {% block content %}
+    <h1>Products and Users</h1>
+    <div class="Products">
+        <div>
+            <h2>Products</h2>
+            {% for product in productquery.products %}
+            <div class="productsinfo">
+                <h3>Product Name: {{ product.productName }}</h3>
+                <p>Price: ${{ product.productPrice}}</p>
+                <p>Description: {{ product.productDesc }}</p>
+            </div>
+            {% empty %}
+            <p>No products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <div class="Users">
+        <h2>Users</h2>
+        {% for user in userquery.users %}
+        <div class="usersinfo">
+            <h3>username: {{ user.username }}</h3>
+            <p>Email: {{ user.email }}</p>
+            <p>Address: {{ user.address }}</p>
+        </div>
+        {% empty %}
+        <p>No users available.</p>
+        {% endfor %}
+    </div>
+    {% endblock content %}
+
+
+
+</div>
+
+</body>
+

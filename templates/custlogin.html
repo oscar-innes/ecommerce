@@ -1,0 +1,32 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/>
+<title>Home</title> 
+<section class="adminlogin">
+<h1>Customer Login</h1>
+<form method="post" action="{% url 'postlogin' %}">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username"><br>
+    <input type="password" name="password" placeholder="Password"><br>
+    <button type="submit" class="login-page-button" role="button"><span class="text">Login</span></button>
+    
+</form>
+{% block content %}
+<h3> Forgot Password? </h3>
+<form method="post" action="{% url 'forgotpass' %}">
+    {% csrf_token %}
+    <input type="text" name="user2" placeholder="Username"><br>
+    <input type="text" name="email" placeholder="Email"><br>
+    <button type="submit" class="forgot-pass-button" role="button"><span class="text">Send email</span></button>
+    
+</form>
+
+
+
+<p>
+    
+    {{ login_message }}
+    
+</p>
+{% endblock content %}

@@ -1,0 +1,28 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>User Account</title> 
+{% block content %}
+<h1>Reset Password page. </h1>
+
+
+<form method="post" action="{% url 'verify_change' %}">
+    {% csrf_token %}
+    <h3> Email should of been sent to your account, please check and enter the code sent. </h3>
+    <input type="hidden" name="code" value="{{ code }}">
+    <input type="hidden" name="user3" value="{{ username }}">
+    <input type="text" name="code2" placeholder="Code from email"><br>
+    <button type="submit" class="enter-code" role="button" required><span class="text">Enter code.</span>
+</form>
+
+
+<h3> Didn't recieve? Click here to send again </h3>
+<form method="post" action="{% url 'forgotpass' %}">
+    {% csrf_token %}
+    <input type="hidden" name="user2" value = {{ username }}><br>
+    <input type="hidden" name="email" value = {{ email }}><br>
+    <button type="submit" class="forgot-pass-button" role="button"><span class="text">Send email</span>
+</form>
+
+{% endblock content %}

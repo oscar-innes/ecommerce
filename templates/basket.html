@@ -1,0 +1,56 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>Cart</title> 
+{% block content %}
+<h1>Basket of {{ username }} </h1>
+
+
+<div class="productlineup">
+    {% for product in productquery.products %}
+        <div class="Ordered-products">
+            <h3 class="name" name="name"> Name: {{ product.name }}</h3>
+            <img src="/static/images/{{ product.image }}.jpg" alt= "{{ product.name }}" class="item-image" name="item-image">
+            <h3 class="item-price" name="item-price"> Price: ${{ product.price }}</h3>
+            <p class="qnt" name="qnt"> Quantity: {{ product.qnt }}</p>
+            <input type="hidden" name="product_name" value="{{ product.name }}">
+            <input type="hidden" name="product_image" value="{{ product.image }}">
+            <input type="hidden" name="product_price" value="{{ product.price }}">
+            <input type="hidden" name="product_desc" value="{{ product.qnt }}">
+            <form method="post" action="{% url 'remove1product' product.name %}">
+                {% csrf_token %}
+                <button type="submit" class="remove_one"><span class="text">-</span>
+            </form>
+            <form method="post" action="{% url 'add1product' product.name %}">
+                {% csrf_token %}
+                <button type="submit" class="addone"><span class="text">+</span>
+            </form>
+        </div>
+    {% empty %}
+    <p>No products available.</p>
+    {% endfor %}
+</div>
+
+<form method="post" action="{% url 'payment' %}">
+    {% csrf_token %}
+    <h4 class="productno">Total number of products: {{ equation }}</h4>
+    <h4 class="price">$ {{ total_price }} Total</h4>
+    <input type="hidden" name="productno" value="{{ equation }}">
+    <input type="hidden" name="totalprice" value="{{ total_price }}">
+    <button type="submit" class="pay-button" role="button" required><span class="text">Pay NOW.</span>
+</form>
+
+
+<form method="post" action="{% url 'clearbasket' %}">
+    {% csrf_token %}
+    <button type="submit" class="clear-basket"><span class="text">Clear Basket</span>
+</form>
+
+
+<form method="post" action="{% url 'products' %}">
+    {% csrf_token %}
+    <button type="submit" class="keep-shopping"><span class="text">Continue Shopping</span>
+</form>
+
+{% endblock content %}

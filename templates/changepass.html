@@ -1,0 +1,18 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>User Account</title> 
+{% block content %}
+<h1>Change password for account </h1>
+
+
+<form method="post" action="{% url 'changepass' %}">
+    {% csrf_token %}
+    <input type="text" name="username" value="{{ username }}"><br>
+    <input type="password" name="newpassword" placeholder="New Password"><br>
+    <input type="password" name="repeatnew" placeholder="Repeat New Password"><br>
+    <button type="submit" class="changepass"><span class="text">Change Password</span></button>
+</form>
+
+{% endblock content %}

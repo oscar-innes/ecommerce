@@ -1,0 +1,48 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<!DOCTYPE html>
+<html> 
+<title>Home</title> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/>
+</head>
+<body>
+    
+    
+    {% block content %}
+
+    {{  Update_Message }}
+
+       <div class="scrolling-boxes">
+            {% for product in productquery.products %}
+            <form method="post" action="{% url 'add_to_cart' %}">
+                {% csrf_token %}
+                <div class="card"><center>
+                    <h2 class="naming" name="naming">{{ product.productName }}</h2>
+                    <img src="/static/images/{{ product.productImage }}.jpg" alt= "{{ product.productName }}" class="item-image" name="item-image">
+                    <h3 class="item-price" name="item-price"> ${{ product.productPrice }}</h3>
+                    <p class="item-description" name="item-description">{{ product.productDesc }}</p>
+                    <input type="hidden" name="product_name" value="{{ product.productName }}">
+                    <input type="hidden" name="product_image" value="{{ product.productImage }}">
+                    <input type="hidden" name="product_price" value="{{ product.productPrice }}">
+                    <input type="hidden" name="product_desc" value="{{ product.productDesc }}">
+                    <div class="Purchase-btn"><h2>Purchase NOW</h2>
+                        <button type="submit" class="add-to-cart" role="button" required><span class="text">Add to cart</span>
+                    </div> 
+                </center></div>
+            </form>
+            {% empty %}
+            <p>No products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endblock content %}
+
+
+    
+  
+</body>
+</html>

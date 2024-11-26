@@ -1,0 +1,31 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>Payment Window</title> 
+{% block content %}
+
+
+{{ purchase_message }}
+
+
+<form method="post" action="{% url 'paynow' %}">
+    {% csrf_token %}
+    <h1> Shipping: </h1>
+    <input type="text" name="houseno" placeholder="House number"><br>
+    <input type="text" name="address" placeholder="Address Line 1"><br>
+    <input type="text" name="postcode" placeholder="Postcode"><br>
+    <input type="text" name="citytown" placeholder="City or Town"><br>
+    <input type="text" name="country" placeholder="Country"><br>
+    <h1> Payment: </h2>
+    <input type="text" name="accountno" placeholder="Account Number"><br>
+    <input type="text" name="sortcode" placeholder="Sort-Code"><br>
+    <input type="password" name="cvv2" placeholder="Cvv2 number"><br>
+    <h4 class="productno">Total number of products: {{ user_basket_count }}</h4>
+    <h4 class="price">$ {{ total_price }} Total</h4>
+    <input type="hidden" name="productno" value="{{ equation }}">
+    <input type="hidden" name="totalprice" value="{{ total_price }}">
+    <button type="submit" class="pay-button" role="button" required><span class="text">Pay NOW.</span>
+</form>
+
+{% endblock content %}

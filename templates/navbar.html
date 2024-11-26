@@ -1,0 +1,17 @@
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<nav class = "navi"> 
+    <ul class = "bar"> 
+      <li><a href="/">Home</a></li> 
+      <li><a href="/contact">Contact</a></li> 
+      <li><a href="/products">Products</a></li> 
+      <li><a href="/user_login">Login</a></li> 
+      <li><a href="/registration">Registration</a></li>
+    </ul> 
+    <ul class = "final-right">
+      <li><a href="/basket">Basket: {% block content %} {{ user_basket_count }} </a></li>
+      <li><a href="/account">Username:  {{ username }} </a></li>
+      <li><a href="/logout"> Logout {% endblock content %}</a></li>
+    </ul>
+</nav> 
+<hr>

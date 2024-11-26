@@ -1,0 +1,28 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>2fa setup</title> 
+
+{% block content %}
+<div class="form-group">
+    <h1>Setup Multi-Factor Authentication</h1>
+    <img src="data:image/png;base64, {{ qr }}" alt="Secret Token"/>
+    <div class="form-group">
+        <label for="secret">Secret Token</label>
+        <input type="text" class="form-control" id="secret" value="{{ secret }}" readonly>
+    </div>
+</div>
+
+<li>Download <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en&gl=US" target="_blank">Google Authenticator</a> on your mobile.</li>
+<li>Add a new authenticator, and scan the QR code above.</li>
+<li>Press Verify OTP button once complete.</li>
+
+
+<form method="post" action="{% url 'verify2fa' username %}">
+    {% csrf_token %}
+    <input type="hidden" name="username" value="{{ username }}">
+    <input type="text" name="otp" placeholder="OTP code" required>
+    <button type="submit" class="2fasubmit" role="button" required><span class="text">Verify OTP</span>
+</form>
+{% endblock content %}

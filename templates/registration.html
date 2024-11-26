@@ -1,0 +1,24 @@
+{% include 'navbar.html' %} 
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>Home</title> 
+<section class="adminlogin">
+<h1>Create Account</h1>
+<form method="post" action="{% url 'postregis' %}">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+    <input type="password" name="repeatpassword" placeholder="Repeat Password" required><br>
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="text" name="address" placeholder="address" required><br>
+    <input type="text" name="phonenumber" placeholder="Phone No" required><br>
+    <p2>Enable 2fa?</p2><input type="checkbox" name="2fa_enabled" value="1" placeholder="Enable 2fa? You will need to set this up.">
+    <button type="submit" class="login-page-button" role="button" required><span class="text">Register</span>
+</form>
+
+<p>
+    {% block content %}
+    {{ register_message }}
+    {% endblock content %}
+</p>

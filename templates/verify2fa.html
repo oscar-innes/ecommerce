@@ -1,0 +1,24 @@
+{% include 'navbar.html' %} 
+{% load static %} 
+<link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<title>2fa Check</title> 
+
+{% block content %}
+<h1> le page </h1>
+
+<form method="post" action="{% url 'verify2fa' username %}">
+    {% csrf_token %}
+    <input type="hidden" name="username" value="{{ username }}">
+    <input type="text" name="otp" placeholder="OTP code" required>
+    <button type="submit" class="2fasubmit" role="button" required><span class="text">Verify OTP</span>
+</form>
+
+
+
+
+
+
+{{ error_message }}
+
+{% endblock content %}

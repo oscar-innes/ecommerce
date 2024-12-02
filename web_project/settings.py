@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ccse.apps.CcseConfig',
     'web_project',
-    'djongo'
+    'djongo',
 
 ]
 

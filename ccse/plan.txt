@@ -10,11 +10,5 @@ so fix schemas
 
 
 
-
-
-backend work to do:
-- order status and delivery info gets updated and the image changes (but is this more frontend?).
-- stripe payments maybe.
-
 once this is done we push on with frontend over crimbo, anything else we can add later as most things are not neccessary otherwise.
 

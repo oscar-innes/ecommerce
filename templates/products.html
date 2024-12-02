@@ -22,7 +22,7 @@
                 {% csrf_token %}
                 <div class="card"><center>
                     <h2 class="naming" name="naming">{{ product.productName }}</h2>
-                    <img src="/static/images/{{ product.productImage }}.jpg" alt= "{{ product.productName }}" class="item-image" name="item-image">
+                    <img src="{% static 'images/' %}{{ product.productImage }}.jpg" alt="{{ product.productName }}" class="item-image" name="item-image">
                     <h3 class="item-price" name="item-price"> ${{ product.productPrice }}</h3>
                     <p class="item-description" name="item-description">{{ product.productDesc }}</p>
                     <input type="hidden" name="product_name" value="{{ product.productName }}">

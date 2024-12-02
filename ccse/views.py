@@ -117,7 +117,6 @@ def verify_change(request):
             return render(request, "verifyemail.html", context)
     except Exception as e:
         context = {"code": code, "username": user3, "email": email}
-        print(e)
         return render(request, "verifyemail.html", context)
 
 

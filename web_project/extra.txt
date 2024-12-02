@@ -1,4 +1,3 @@
-
 .navi {
   display: flex;
   position: relative;
@@ -108,7 +107,7 @@ float: left;
   width: 60%; 
   height: 2400px; 
   align-items: center;
-  flex-direction: column;
+  flex-direction: row;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
 }
 

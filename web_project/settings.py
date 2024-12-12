@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'ccse.apps.CcseConfig',
     'web_project',
     'djongo',
+    'bootstrap5'
 
 ]
 

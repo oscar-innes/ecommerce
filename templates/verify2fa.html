@@ -1,24 +1,35 @@
 {% include 'navbar.html' %} 
 {% load static %} 
 <link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <title>2fa Check</title> 
-
+<body class = "bg-secondary bg-gradient text-white">
 {% block content %}
-<h1> le page </h1>
-
-<form method="post" action="{% url 'verify2fa' username %}">
-    {% csrf_token %}
-    <input type="hidden" name="username" value="{{ username }}">
-    <input type="text" name="otp" placeholder="OTP code" required>
-    <button type="submit" class="2fasubmit" role="button" required><span class="text">Verify OTP</span>
-</form>
-
-
-
-
+<h1 align="center"> Insert OTP Code </h1>
+<div class="mb-3 row justify-content-center align-items-center">
+    <form method="post" action="{% url 'verify2fa' username %}">
+        {% csrf_token %}
+        <div class="mb-3 row justify-content-center align-items-center">
+            <div style="width: 180px; row w-100">
+                <div class="col-sm-50 offset-sm-22 mb-22">
+                    <input type="hidden" class="form-control" name="username" value="{{ username }}">
+                </div>
+            </div>
+            <div style="row">
+                <div class="col-sm-5 offset-sm-5 ms-9 mb-7">
+                    <input type="text" style="width: 22rem;" class="form-control" name="otp" placeholder="OTP code" required>
+                </div>
+            </div>
+            <div class="mb-3 row justify-content-center align-items-center">
+                <button type="submit"  class="btn btn-primary" style="width: 200px;" role="button" required><span class="text">Verify OTP</span>
+            </div>
+        </div>
+    </form>
+</div>
 
 
 {{ error_message }}
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
 {% endblock content %}

@@ -12,3 +12,79 @@
 2024-12-02 15:06:57,863 [INFO] ccse.views: TheBigBoss has logged out of the site.
 2024-12-02 15:10:17,072 [INFO] ccse.views: guru successfully logged in
 2024-12-02 20:22:13,173 [INFO] ccse.views: guru successfully logged in
+2024-12-04 16:59:39,590 [INFO] ccse.views: guru successfully logged in
+2024-12-09 14:35:18,546 [INFO] ccse.views: TheBigBoss has logged out of the site.
+2024-12-09 14:35:29,824 [INFO] ccse.views: guru successfully logged in
+2024-12-09 15:56:35,839 [INFO] ccse.views: guru successfully logged in
+2024-12-09 15:56:59,597 [INFO] ccse.views: guru has logged out of the site.
+2024-12-09 15:57:10,734 [INFO] ccse.views: guru successfully logged in
+2024-12-09 16:49:22,066 [INFO] ccse.views: guru successfully logged in
+2024-12-09 18:28:39,765 [INFO] ccse.views: guru successfully logged in
+2024-12-09 18:35:54,688 [INFO] ccse.views: guru successfully logged in
+2024-12-09 18:38:17,571 [INFO] ccse.views: guru successfully logged in
+2024-12-09 18:44:02,459 [INFO] ccse.views: guru successfully logged in
+2024-12-09 18:44:45,490 [INFO] ccse.views: guru successfully logged in
+2024-12-10 13:02:13,071 [INFO] ccse.views: guru successfully logged in
+2024-12-10 13:10:58,112 [INFO] ccse.views: guru successfully logged in
+2024-12-10 13:13:28,910 [INFO] ccse.views: guru successfully logged in
+2024-12-10 13:21:33,047 [INFO] ccse.views: guru successfully logged in
+2024-12-10 13:52:29,371 [INFO] ccse.views: guru successfully logged in
+2024-12-10 16:16:53,567 [INFO] ccse.views: guru successfully logged in
+2024-12-10 16:18:23,273 [INFO] ccse.views: guru successfully logged in
+2024-12-10 16:19:04,417 [INFO] ccse.views: guru successfully logged in
+2024-12-10 16:51:03,366 [INFO] ccse.views: guru successfully logged in
+2024-12-10 17:47:47,417 [INFO] ccse.views: guru has logged out of the site.
+2024-12-10 19:39:20,737 [INFO] ccse.views: guru successfully logged in
+2024-12-10 20:12:15,283 [INFO] ccse.views: guru successfully logged in
+2024-12-10 20:24:16,265 [INFO] ccse.views: guru has logged out of the site.
+2024-12-10 20:27:29,252 [INFO] ccse.views: TheBigBoss has logged out of the site.
+2024-12-11 10:03:05,562 [INFO] ccse.views: guru successfully logged in
+2024-12-11 10:03:27,485 [INFO] ccse.views: guru successfully logged in
+2024-12-11 10:03:55,032 [INFO] ccse.views: guru successfully logged in
+2024-12-11 10:05:43,610 [INFO] ccse.views: guru successfully logged in
+2024-12-11 10:46:28,295 [INFO] ccse.views: Account gobba created.
+2024-12-11 20:33:26,522 [INFO] ccse.views: guru successfully logged in
+2024-12-11 20:52:06,351 [INFO] ccse.views: guru successfully logged in
+2024-12-12 08:05:17,214 [INFO] ccse.views: TheBigBoss logged in and accessed admin panel.
+2024-12-12 08:06:22,620 [INFO] ccse.views: TheBigBoss has logged out of the site.
+2024-12-12 08:17:18,951 [CRITICAL] ccse.views: Attempted access admin page and was forbidden.
+2024-12-12 08:27:07,354 [INFO] ccse.views: TheBigBoss logged in and accessed admin panel.
+2024-12-12 08:34:48,672 [INFO] ccse.views: TheBigBoss has logged out of the site.
+2024-12-12 08:35:38,302 [INFO] ccse.views: TheBigBoss logged in and accessed admin panel.
+2024-12-12 11:02:00,451 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:07:13,891 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:12:23,383 [INFO] ccse.views: guru has logged out of the site.
+2024-12-12 11:12:35,076 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:15:12,755 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:15:57,783 [INFO] ccse.views: Payment from guru approved for  Product: Toy x 1 .
+2024-12-12 11:16:42,355 [INFO] ccse.views: Payment from guru approved for .
+2024-12-12 11:28:05,124 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:38:35,823 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:56:37,252 [INFO] ccse.views: guru successfully logged in
+2024-12-12 11:57:47,987 [INFO] ccse.views: guru successfully logged in
+2024-12-12 12:08:00,462 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:08:30,461 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:10:27,646 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:10:28,236 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:13:35,330 [INFO] ccse.views: guru has logged out of the site.
+2024-12-12 12:13:45,009 [INFO] ccse.views: guru successfully logged in
+2024-12-12 12:13:52,655 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:15:26,659 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:18:23,705 [INFO] ccse.views: Order from guru cancelled for  Product: Toy x 1 .
+2024-12-12 12:19:08,172 [INFO] ccse.views: Payment from guru approved for  Product: Toy x 1 .
+2024-12-12 12:49:46,608 [INFO] ccse.views: guru successfully logged in
+2024-12-12 12:54:57,503 [INFO] ccse.views: Payment from guru approved for  Product: Toy x 1 .
+2024-12-12 13:21:50,258 [INFO] ccse.views: guru successfully logged in
+2024-12-12 13:27:34,020 [INFO] ccse.views: guru successfully logged in
+2024-12-12 13:28:40,635 [INFO] ccse.views: guru successfully logged in
+2024-12-12 13:30:16,571 [INFO] ccse.views: guru successfully logged in
+2024-12-12 18:04:59,511 [INFO] ccse.views: guru successfully logged in
+2024-12-12 18:05:52,363 [INFO] ccse.views: guru successfully logged in
+2024-12-12 18:06:50,571 [INFO] ccse.views: guru successfully logged in
+2024-12-12 18:14:10,101 [INFO] ccse.views: Order from guru cancelled for None.
+2024-12-12 18:47:06,643 [INFO] ccse.views: guru successfully logged in
+2024-12-12 19:19:31,140 [CRITICAL] ccse.views: Attempted access admin page and was forbidden.
+2024-12-12 19:19:42,115 [INFO] ccse.views: guru successfully logged in
+2024-12-12 19:29:21,966 [INFO] ccse.views: guru successfully logged in
+2024-12-12 19:30:10,596 [INFO] ccse.views: Payment from guru approved for  Product: Toy x 1 .
+2024-12-12 19:38:00,430 [INFO] ccse.views: Order for guru updated to Dispatched to courier.

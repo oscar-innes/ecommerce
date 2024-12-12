@@ -1,28 +1,46 @@
 {% include 'navbar.html' %} 
 {% load static %} 
 <link rel="stylesheet" type="text/css" href="{% static "styles/styles.css" %}"/> 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <title>User Account</title> 
+<body class = "bg-secondary bg-gradient text-white">
 {% block content %}
-<h1>Reset Password page. </h1>
+<h1 align="center">Reset Password page. </h1>
 
-
-<form method="post" action="{% url 'verify_change' %}">
-    {% csrf_token %}
-    <h3> Email should of been sent to your account, please check and enter the code sent. </h3>
-    <input type="hidden" name="code" value="{{ code }}">
-    <input type="hidden" name="user3" value="{{ username }}">
-    <input type="text" name="code2" placeholder="Code from email"><br>
-    <button type="submit" class="enter-code" role="button" required><span class="text">Enter code.</span>
-</form>
-
-
-<h3> Didn't recieve? Click here to send again </h3>
-<form method="post" action="{% url 'forgotpass' %}">
-    {% csrf_token %}
-    <input type="hidden" name="user2" value = {{ username }}><br>
-    <input type="hidden" name="email" value = {{ email }}><br>
-    <button type="submit" class="forgot-pass-button" role="button"><span class="text">Send email</span>
-</form>
-
+<div class="mb-3 row justify-content-center align-items-center">
+    <form method="post" action="{% url 'verify_change' %}">
+        {% csrf_token %}
+            <div class="mb-3 row justify-content-center align-items-center">
+                <div class="col-sm-50 offset-sm-22 mb-22">
+                    <h3 align="center"> Email should of been sent to your account, please check and enter the code sent. </h3>
+                    <input type="hidden" name="code" value="{{ code }}">
+                    <input type="hidden" name="user3" value="{{ username }}">
+                    <div class="container">
+                        <div class="mb-3 row justify-content-center align-items-center">
+                            <input type="text"  style="width: 250px;" class="form-control ms-99" name="code2" placeholder="Code from email"><br>
+                        </div>
+                    </div>
+                    <div class="mb-3 row justify-content-center align-items-center">
+                        <button type="submit" style="width: 250px;" class="btn btn-primary" role="button" required><span class="text">Enter code.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+    <h3 align="center"> Didn't recieve? Click here to send again </h3>
+    <form method="post" action="{% url 'forgotpass' %}">
+        <div class="width: 180px; row w-100">
+            {% csrf_token %}
+            <input type="hidden" name="user2" value = {{ username }}><br>
+            <input type="hidden" name="email" value = {{ email }}><br>
+            <div class="mb-3 row justify-content-center align-items-center">
+                <button type="submit" style="width: 250px;" class="btn btn-primary" role="button"><span class="text">Send email</span>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
 {% endblock content %}

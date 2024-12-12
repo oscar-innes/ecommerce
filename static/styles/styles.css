@@ -52,6 +52,23 @@
   background-image: linear-gradient(rgb(129, 196, 235), rgb(5, 44, 151)); 
 } 
 
+
+.progress {
+  position: relative; /* This ensures the .progress-bar stays inside */
+  height: 20px;
+  background-color: #f4f4f4;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #007bff; /* Set the bar's color */
+}
+
 .project-area { 
 
   background-repeat: no-repeat; 
@@ -106,25 +123,13 @@ float: left;
   border: 1px solid #f6ace1; 
   padding: 10px; 
   width: 60%; 
-  height: 2400px; 
+  height: 1000px; 
   align-items: center;
   flex-direction: column;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
 }
 
-.card {
-  flex: 0 0 auto; 
-  width: 80%; 
-  height: 2400px; 
-  background-color: #f6ace1; 
-  border: 1px solid #f6ace1; 
-  border-radius: 5px; 
-  padding: 10px;
-  margin-right: 10px; 
-  display: flex;  
-  text-align: center; 
-  transition: transform 0.2s; 
-}
+
 
 .item-image {
   max-width: 100%; 
@@ -132,14 +137,6 @@ float: left;
   margin: 10px 0; 
 }
 
-.card h3, .card p{
-  margin: 10px 0; 
-}
-
-
-.card:hover {
-  transform: scale(1.05); 
-}
   
 
 .wapper {
@@ -183,23 +180,7 @@ float: left;
     color: #ffd800;
   }
 }
-.progress-bar {
-  position: absolute;
-  height: 10px;
-  width: 25%;
-  top: 20px;
-  left: 10%;
-  background: #bbb;
-  &.first {
-    background: #0C84D9;
-  }
-  &.second {
-    left: 37%;
-  }
-  &.third {
-    left: 64%;
-  }
-}
+
 .message {
   position: absolute;
   height: 60px;

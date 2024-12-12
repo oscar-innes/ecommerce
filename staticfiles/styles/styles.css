@@ -106,36 +106,19 @@ float: left;
   border: 1px solid #f6ace1; 
   padding: 10px; 
   width: 60%; 
-  height: 2400px; 
+  height: 1000px; 
   align-items: center;
   flex-direction: column;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
 }
 
-.card {
-  flex: 0 0 auto; 
-  width: 80%; 
-  height: 2400px; 
-  background-color: #f6ace1; 
-  border: 1px solid #f6ace1; 
-  border-radius: 5px; 
-  padding: 10px;
-  margin-right: 10px; 
-  display: flex;  
-  text-align: center; 
-  transition: transform 0.2s; 
-}
+
 
 .item-image {
   max-width: 100%; 
   border-radius: 5px; 
   margin: 10px 0; 
 }
-
-.card h3, .card p{
-  margin: 10px 0; 
-}
-
 
 .card:hover {
   transform: scale(1.05); 

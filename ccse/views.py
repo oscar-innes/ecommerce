@@ -44,7 +44,6 @@ def is_otp_valid(username, secret, user_otp):
   return totp.verify(user_otp)
 
 def get_b64encoded_qr_image(data):
-    print(data)
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)
     qr.make(fit=True)
@@ -52,7 +51,6 @@ def get_b64encoded_qr_image(data):
     buffered = BytesIO()
     img.save(buffered)
     return b64encode(buffered.getvalue()).decode("utf-8")
-
 
 def forgot_pass(request):
     db = get_db()
@@ -66,7 +64,7 @@ def forgot_pass(request):
             vector = k.get("vector")
             actualemail = decrypt_customers(username, email_to_decrypt, vector) 
             generated_code = random.randint(100000000000, 999999999999)
-            actualemail = fix_email(actualemail)
+            actualemail = fix_email(actualemail) #only gmail emails atm do fix. the .'s in other emails cause problems when retrieved from database
             if actualemail == email:
                 sg = sendgrid.SendGridAPIClient(os.environ.get("SENDGRID_API_KEY")
                 )
@@ -78,7 +76,8 @@ def forgot_pass(request):
                 )
                 mail = Mail(from_email, to_email, subject, content)
                 response = sg.client.mail.send.post(request_body=mail.get())
-                context = {"code": generated_code, "username": username, "email": email}
+                code = request.session[username][generated_code]
+                context = {"username": username, "email": email}
                 logger.info(f"{username} logged in and accessed admin panel.")
                 return render(request, "verifyemail.html", context)
             else:
@@ -91,21 +90,18 @@ def forgot_pass(request):
     except Exception as e:
         context = {"login_message": "Error occured, ensure you have inputted valid email."}
         return render(request, "custlogin.html", context)
-                
-
-
 
 def verify_change(request):
     db = get_db()
     hi = request.POST
     code = hi.get('code')
-    code2 = hi.get('code2')
     user3 = hi.get('user3')
     email = hi.get('email')
     try:
         if user3 != None:
-            if code == code2:
+            if code == request.session['username'][code]:
                 context = {"username": user3}
+                del request.session['username'][code]
                 request.session['codeaccepted'] = True
                 request.session['username'] = user3
                 return render(request, "changepass.html", context)
@@ -116,21 +112,96 @@ def verify_change(request):
             context = {"code": code, "username": user3, "email": email}
             return render(request, "verifyemail.html", context)
     except Exception as e:
-        context = {"code": code, "username": user3, "email": email}
-        return render(request, "verifyemail.html", context)
-
+        return render(request, "custlogin.html", context)
 
 def order_status(request):
-    pass
+    try:
+        db = get_db()
+        username = request.session['username']
+        post = request.POST
+        if role_check(username):
+            status = sanitise_input(post.get('status'))
+            ordering = sanitise_input(post.get('ordering'))
+            ordered = ordering.split(" -- ")
+            timestamp = ordered[1]
+            better_timestamp = f"{timestamp[:2]}/{timestamp[2:4]}/{timestamp[4:]}"
+            cond1 = {
+                "username": ordered[2],
+                "timestamp": better_timestamp,
+                "products": ordered[0]
+            }
+            k = db.Orders.find_one(cond1)
+            if k:
+                update = {
+                    "$set": {
+                        "status": f"{status}"
+                    }
+                }
+                update = db.Orders.update_one(cond1, update)
+                if update:
+                    basket = request.session['baskets'][username]
+                    equation = 0
+                    for usbskt2 in basket:
+                        equation += usbskt2['qnt']
+                    userquery = list(db.Logins.find({}))
+                    userproducts = list(db.Products.find({}))
+                    orders = list(db.Orders.find({}))
+                    context= {'users': userquery}
+                    context2 = {'products': userproducts}
+                    username = request.session['username']
+                    context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation,'orderquery':orders, 'Update_message': 'Successfully updated order!'}
+                    logger.info(f"Order for {username} updated to {status}.")
+                    return render(request, "adminpanel.html", context4)
+                else:   
+                    basket = request.session['baskets'][username]
+                    equation = 0
+                    for usbskt2 in basket:
+                        equation += usbskt2['qnt']
+                    userquery = list(db.Logins.find({}))
+                    userproducts = list(db.Products.find({}))
+                    orders = list(db.Orders.find({}))
+                    context= {'users': userquery}
+                    context2 = {'products': userproducts}
+                    username = request.session['username']
+                    context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation,'orderquery':orders, 'Update_message': 'Failed to update order!'}
+                    return render(request, "adminpanel.html", context4)     
+            else:
+                basket = request.session['baskets'][username]
+                equation = 0
+                for usbskt2 in basket:
+                    equation += usbskt2['qnt']
+                userquery = list(db.Logins.find({}))
+                userproducts = list(db.Products.find({}))
+                orders = list(db.Orders.find({}))
+                context= {'users': userquery}
+                context2 = {'products': userproducts}
+                username = request.session['username']
+                context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation,'orderquery':orders, 'Update_message': 'Failed to update order!'}
+                return render(request, "adminpanel.html", context4)
+        else:
+            basket = request.session['baskets'][username]
+            equation = 0
+            for usbskt2 in basket:
+                equation += usbskt2['qnt']
+            userquery = list(db.Logins.find({}))
+            userproducts = list(db.Products.find({}))
+            orders = list(db.Orders.find({}))
+            context= {'users': userquery}
+            context2 = {'products': userproducts}
+            username = request.session['username']
+            context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation,'orderquery':orders, 'Update_message': 'Failed to update order!'}
+            return render(request, "adminpanel.html", context4)
+    except Exception as e:
+        return render(request, "custlogin.html", {'login_message': 'Login before you try and execute admin actions'})
 
 def verify2fa(request, username):
     db = get_db()
     hi = request.POST
-    otp = hi.get('otp')
     k = db.Logins.find_one({"username": username})
+    otp = hi.get('otp')
     try:
         if k:
-            sec = k.get("secret_token")
+            sec = k.get('secret_token')
             if is_otp_valid(username, sec, otp):
                 print("2FA verification successful!!")
                 request.session['username'] = username
@@ -142,23 +213,21 @@ def verify2fa(request, username):
                 if role_check(username):
                     userquery = list(db.Logins.find({}))
                     userproducts = list(db.Products.find({}))
+                    orders = list(db.Orders.find({}))
                     context= {'users': userquery}
                     context2 = {'products': userproducts}
                     username = request.session['username']
-                    context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation}
+                    context4 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation,'orderquery':orders}
                     logger.info(f"{username} logged in and accessed admin panel.")
                     return render(request, "adminpanel.html", context4)
-
                 else:  
                     username = request.session['username']
                     logger.info(f"{username} logged in.")
                     return render(request, "home.html", context3)
             else:
-                print("Invalid OTP. Please try again.")
-                return render(request, "verify2fa.html", {'error_message': 'Invalid OTP Please retry.'})
+                return render(request, "verify2fa.html", {'username': username, 'error_message': 'Invalid OTP Please retry.'})
         else:
-            print("Invalid OTP. Please try again.")
-            return render(request, "verify2fa.html", {'error_message': 'Invalid OTP. Please retry.'})
+            return render(request, "verify2fa.html", {'username': username, 'error_message': 'Invalid OTP. Please retry.'})
     except Exception as e:
         return render(request, "verify2fa.html", {'error_message': 'Invalid OTP Please retry.'})
 
@@ -182,18 +251,29 @@ def role_check2(username):
     else:
         return False
     
-def card_check(sort_code, account_no, cvv):
+def card_check(sort_code, account_no, cvv, date):
     acc2 = int(account_no)
     reggie = r'^[1-9]{2}\s?\-?[1-9]{2}\s?\-?[1-9]{2}$'
     if acc2 >= 100000000000 and acc2 <= 999999999999:
         if len(cvv) == 3:
             if re.match(reggie, sort_code):
-                return True
+                month = date[:4]
+                year = date[5:7]
+                print(year)
+                print(month)
+                if int(year) > datetime.datetime.now().year and int(month) > datetime.datetime.now().month:
+                    print("date error")
+                    return False
+                else:
+                    return True
             else:
+                print("sortcode")
                 return False
         else:
+            print("cvv error")
             return False
-    else: 
+    else:
+        print("acc number error") 
         return False
                 
 def sanitise_no(input):
@@ -228,9 +308,8 @@ def password_check(password):
 def generate_salt(length=16):
     return secrets.token_hex(length)
 
-def create_basket(request, session):
+def create_basket(request, session, username):
     session_id = session.session_key
-    username = request.session['username']
     if 'basket' not in session:
         request.session['baskets'] = {}
     if 'username' not in session['baskets']:
@@ -344,6 +423,7 @@ def products(request):
         ##I think this is involving pulling the products
         return render(request, "products.html", context3)
     except Exception as e:
+        print(e)
         return render(request, "products.html")
         
 def cust_login(request): 
@@ -357,99 +437,114 @@ def cust_login(request):
         return render(request, "custlogin.html")
     
 def delete_file(request): 
-    username = request.session['username']
-    if role_check(username):
-        db = get_db()
-        data = request.POST
-        userindex = sanitise_input(data.get('delproductname'))
-        role = sanitise_input(data.get('sommat'))
-        if role == "Products":
-            db.Products.delete_one({"productName": userindex})
-            userquery = list(db.Logins.find({}))
-            userproducts = list(db.Products.find({}))
-            context= {'users': userquery}
-            context2 = {'products': userproducts}
-            logger.info(f"Product {userindex} deleted.")
-            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product deleted."}
-            return render(request, "adminpanel.html", context3)
-        elif role == "Logins":
-            db.Logins.delete_one({"username": userindex})
-            userquery = list(db.Logins.find({}))
-            userproducts = list(db.Products.find({}))
-            context= {'users': userquery}
-            context2 = {'products': userproducts}
-            logger.info(f"User {userindex} deleted.")
-            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"User deleted."}
-            return render(request, "adminpanel.html", context3)
-        else:
-            userquery = list(db.Logins.find({}))
-            userproducts = list(db.Products.find({}))
-            context= {'users': userquery}
-            context2 = {'products': userproducts}
-            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Element not found in the database."}
-            return render(request, "adminpanel.html", context3)
-
-def postlogin(request): 
-    data = request.POST
-    db = get_db()
-    username = sanitise_input(data.get('username'))
-    password = sanitise_input(data.get('password'))
-    exists = db.Logins.find_one({"username": f"{username}"})
-    if exists:
-        if username in login_attempts and login_attempts[username] <= 10:
-            passy = exists.get("password")
-            salty = exists.get("salt")
-            vector = exists.get("vector")
-            facheck = exists.get("secret_token")
-            salt2 = unencrypt_salt(username, salty, vector) 
-            check = create_hash(password, salt2)
-            string_value = check.decode('utf-8')
-            wham2 = str(string_value)
-            if wham2 == passy:
-                request.session['username'] = username
-                create_basket(request, request.session)
-                if facheck != "no":
-                    login_attempts[username] == 0
-                    equation = 0
-                    basket = request.session['baskets'][username]
-                    for usbskt2 in basket:
-                        equation += usbskt2['qnt']
-                    context3 = {'username': username, 'user_basket_count': equation}
-                    return render(request, "verify2fa.html", context3)
-                else:
-                    if role_check(username):
-                        basket = request.session['baskets'][username]
-                        login_attempts[username] == 0
-                        userquery = list(db.Logins.find({}))
-                        userproducts = list(db.Products.find({}))
-                        context= {'users': userquery}
-                        context2 = {'products': userproducts}
-                        equation = 0
-                        for usbskt2 in basket:
-                            equation += usbskt2['qnt']
-                        context3 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation}
-                        logger.info(f"{username} successfully logged in")
-                        return render(request, "adminpanel.html", context3)
-                    else:
-                        basket = request.session['baskets'][username]
-                        login_attempts[username] == 0
-                        equation = 0
-                        for usbskt2 in basket:
-                            equation += usbskt2['qnt']
-                        logger.info(f"{username} logged in.")
-                        context3 = {'username': username, 'user_basket_count': equation}
-                        return render(request, "home.html", context3)
+    try:
+        username = request.session['username']
+        if role_check(username):
+            db = get_db()
+            data = request.POST
+            userindex = sanitise_input(data.get('delproductname'))
+            role = sanitise_input(data.get('sommat'))
+            if role == "Products":
+                db.Products.delete_one({"productName": userindex})
+                userquery = list(db.Logins.find({}))
+                userproducts = list(db.Products.find({}))
+                orders = list(db.Orders.find({}))
+                context= {'users': userquery}
+                context2 = {'products': userproducts}
+                logger.info(f"Product {userindex} deleted.")
+                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product deleted.", 'orderquery':orders}
+                return render(request, "adminpanel.html", context3)
+            elif role == "Logins":
+                db.Logins.delete_one({"username": userindex})
+                userquery = list(db.Logins.find({}))
+                userproducts = list(db.Products.find({}))
+                orders = list(db.Orders.find({}))
+                context= {'users': userquery}
+                context2 = {'products': userproducts}
+                logger.info(f"User {userindex} deleted.")
+                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"User deleted.", 'orderquery':orders}
+                return render(request, "adminpanel.html", context3)
             else:
-                logger.error(f"Incorrect login attempt for {username} ")
-                return render(request, "custlogin.html", {'login_message': 'Passwords do not match'})
-        
+                userquery = list(db.Logins.find({}))
+                userproducts = list(db.Products.find({}))
+                orders = list(db.Orders.find({}))
+                context= {'users': userquery}
+                context2 = {'products': userproducts}
+                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Element not found in the database.", 'orderquery':orders}
+                return render(request, "adminpanel.html", context3)
         else:
-            login_attempts[username] += 1
-            return render(request, "custlogin.html", {'login_message': 'user cannot be indexed'})
+            logger.critical(f"{username} Attempted access admin page and was forbidden.")
+            return HttpResponse(status=403)
+    except Exception as e:
+        logger.critical(f"User Attempted access admin page and was forbidden.")
+        return HttpResponse(status=403)
 
-    else:
-        return render(request, "custlogin.html", {'login_message': 'user does not exist'})
+def postlogin(request):
+    try: 
+        data = request.POST
+        db = get_db()
+        username = sanitise_input(data.get('username'))
+        password = sanitise_input(data.get('password'))
+        exists = db.Logins.find_one({"username": f"{username}"})
+        if exists:
+            if username in login_attempts and login_attempts[username] <= 10:
+                passy = exists.get("password")
+                salty = exists.get("salt")
+                vector = exists.get("vector")
+                facheck = exists.get("secret_token")
+                salt2 = unencrypt_salt(username, salty, vector) 
+                check = create_hash(password, salt2)
+                string_value = check.decode('utf-8')
+                wham2 = str(string_value)
+                if wham2 == passy:
+                    create_basket(request, request.session, username)
+                    if facheck != "no":
+                        login_attempts[username] == 0
+                        equation = 0
+                        basket = request.session['baskets'][username]
+                        for usbskt2 in basket:
+                            equation += usbskt2['qnt']
+                        context3 = {'username': username, 'user_basket_count': equation}
+                        return render(request, "verify2fa.html", context3)
+                    else:
+                        if role_check(username):
+                            basket = request.session['baskets'][username]
+                            login_attempts[username] == 0
+                            request.session['username'] = username
+                            userquery = list(db.Logins.find({}))
+                            userproducts = list(db.Products.find({}))
+                            orders = list(db.Orders.find({}))
+                            context= {'users': userquery}
+                            context2 = {'products': userproducts}
+                            equation = 0
+                            for usbskt2 in basket:
+                                equation += usbskt2['qnt']
+                            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'user_basket_count': equation, 'orderquery':orders}
+                            logger.info(f"{username} successfully logged in")
+                            return render(request, "adminpanel.html", context3)
+                        else:
+                            basket = request.session['baskets'][username]
+                            login_attempts[username] == 0
+                            equation = 0
+                            for usbskt2 in basket:
+                                equation += usbskt2['qnt']
+                            logger.info(f"{username} logged in.")
+                            context3 = {'username': username, 'user_basket_count': equation}
+                            return render(request, "home.html", context3)
+                else:
+                    logger.error(f"Incorrect login attempt for {username} ")
+                    return render(request, "custlogin.html", {'login_message': 'Passwords do not match'})
+        
+            else:
+                login_attempts[username] += 1
+                return render(request, "custlogin.html", {'login_message': 'user cannot be indexed'})
 
+        else:
+            return render(request, "custlogin.html", {'login_message': 'user does not exist'})
+    except Exception as e:
+        print(e)
+        return render(request, "custlogin.html", {'login_message': 'Server error, contact support'})
+    
 def admin(request):
     try:
         username2 = request.session['username']
@@ -458,15 +553,16 @@ def admin(request):
             db = get_db()
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
+            orders = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
-            context3 = {'productquery': context2, 'userquery': context, 'username': username2}
+            context3 = {'productquery': context2, 'userquery': context, 'username': username2, 'orderquery':orders}
             return render(request, "adminpanel.html", context3)
         else:
             logger.critical(f"{username2} attempted to access admin page and was forbidden.")
             return HttpResponse(status=403)
     except Exception as e:
-        logger.critical(f"{username2} attempted to access admin page and was forbidden.")
+        logger.critical(f"Attempted access admin page and was forbidden.")
         return HttpResponse(status=403)
 
 def postregis(request): 
@@ -521,7 +617,8 @@ def postregis(request):
                                                 issuer_name='SecureCart') 
                                                 base64_qr_image = get_b64encoded_qr_image(totp_auth)
                                                 request.session['username'] = username
-                                                context = {"secret": token, 'qr': base64_qr_image, 'username': username, 'username2': username}
+                                                token = request.session[username]['otptoken']
+                                                context = {'qr': base64_qr_image, 'username': username, 'username2': username}
                                                 logger.info(f"Account {username} created with 2fa enabled.")
                                                 return render(request, "setup2fa.html", context)
                                             else:
@@ -714,8 +811,7 @@ def basket(request):
         return render(request, "basket.html", context3) 
     except Exception as e:
         equation = 0
-        username = request.session['username']
-        context3 = {"user_basket_count": equation, 'username': username}
+        context3 = {"user_basket_count": equation}
         return render(request, "custlogin.html", context3)    
 
     ###youtube tutorial tommorow
@@ -725,7 +821,6 @@ def add_to_cart(request):
         if request.session['username'] != None:
             username = request.session['username']
             basket = request.session['baskets'][username]
-            print(basket)
             db = get_db()
             name = request.POST.get('product_name')
             image = request.POST.get('product_image')
@@ -770,11 +865,11 @@ def add_to_cart(request):
             context3 = {'productquery': context2, 'Update_Message': "No user logged in", "username": username}
             return render(request, "products.html", context3)
     except Exception as e:
-            db = get_db()
-            userproducts = list(db.Products.find({}))
-            context2 = {'products': userproducts}
-            context3 = {'productquery': context2, 'Update_Message': "No user logged in", "username": username}
-            return render(request, "products.html")
+        db = get_db()
+        userproducts = list(db.Products.find({}))
+        context2 = {'products': userproducts}
+        context3 = {'productquery': context2, 'Update_Message': "No user logged in"}
+        return render(request, "products.html")
 
 def payment(request): #were gonna do login logic here
     try:
@@ -803,46 +898,57 @@ def payment(request): #were gonna do login logic here
         return render(request, "purchase.html", context3)  
 
 def paynow(request):
-    db = get_db()
-    data = request.POST
-    accno = sanitise_input(data.get('accountno'))
-    srtcode = sanitise_input(data.get('sortcode'))
-    cvv = sanitise_input(data.get('cvv2'))
-    shipping_address = sanitise_input(data.get('address'))
-    cityortown = sanitise_input(data.get('citytown'))
-    houseno = sanitise_input(data.get('houseno'))
-    postcode = sanitise_input(data.get('postcode'))
-    country = sanitise_input(data.get('country'))
-    username = request.session['username']
-    basket = request.session['baskets'][username]
     try:
-        exists = db.Logins.find_one({ "username": f"{username}"})
-        if exists and card_check(srtcode, accno, cvv):
+        db = get_db()
+        data = request.POST
+        accno = sanitise_input(data.get('accountno'))
+        srtcode = sanitise_input(data.get('sortcode'))
+        cvv = sanitise_input(data.get('cvv2'))
+        expiry = sanitise_input(str(data.get('expiry')))
+        name = sanitise_input(data.get('name'))
+        shipping_address = sanitise_input(data.get('address'))
+        cityortown = sanitise_input(data.get('citytown'))
+        houseno = sanitise_input(data.get('houseno'))
+        postcode = sanitise_input(data.get('postcode'))
+        country = sanitise_input(data.get('country'))
+        username = request.session['username']
+        basket = request.session['baskets'][username]
+        exists = db.Logins.find_one({"username": f"{username}"})
+        if exists and card_check(srtcode, accno, cvv, expiry):
             vector = exists.get("vector")
             email = exists.get("email")
             enccvv = encrypt_customers(username, cvv, vector)
+            encname = encrypt_customers(username, name, vector)
+            encexpiry = encrypt_customers(username, cvv, vector)
             encaccountno = encrypt_customers(username, accno, vector)
             encsortcode = encrypt_customers(username, srtcode, vector)
             current_datetime = datetime.datetime.now()
+            thedate = current_datetime.date().strftime(
+            '%d/%m/%Y')  #grab and apply the date and time
+            thetime = current_datetime.time().strftime('%H:%M:%S')
+            thedatetime = f"{thedate} {thetime}"
             prodstring = ""
             for item in basket:
-                prodstring += 'Product:' + item['name'] + " " + 'x' + " " + str(item['qnt']) + " " #list of products inside an orders file.
+                prodstring += ' Product:' + " " + item['name'] + " " + 'x' + " " + str(item['qnt']) + " " #list of products inside an orders file.
             file = {
                     "username": f"{username}",
                     "products": f"{prodstring}",
+                    "encdate": f"{encexpiry}",
+                    "encname": f"{encname}",
                     "encaccnumber": f"{encaccountno}",
                     "enccvv": f"{enccvv}",
                     "encsortcode": f"{encsortcode}",
                     "status": 'Order confirmed',
-                    "timestamp": f"{current_datetime}",
-                    "house number": f"{houseno}",
+                    "timestamp": f"{thedatetime}",
+                    "house_number": f"{houseno}",
                     "address": f"{shipping_address}",
                     "citytown": f"{cityortown}",
                     "postcode": f"{postcode}",
                     "country": f"{country}",
                     "email": f"{email}"
                 }
-            insert = db.Orders.insert_one(file) #if we were doing the realisitic card transfer it would involve the api to subtract money from a card, but this is fake for purposes of cw so we cant use stripe or something like that.
+            insert = db.Orders.insert_one(file)
+             #if we were doing the realisitic card transfer it would involve the api to subtract money from a card, but this is fake for purposes of cw so we cant use stripe or something like that.
             if insert:  
                 for item in basket:
                     check = db.Products.find_one({"productName": item['name']})
@@ -857,7 +963,7 @@ def paynow(request):
                 context2 = {'orderquery': orders}
                 logger.info(f"Payment from {username} approved for {prodstring}.")
                 context3 = {'orderquery': context2, 'username': request.session['username']}
-                return render(request, "account.html", context3)
+                return render(request, "home.html", context3)
             else:
                 context2 = {'products': basket}
                 finalprice = 0
@@ -881,20 +987,11 @@ def paynow(request):
                 finalprice += price_prod  
             for usbskt2 in basket:
                 equation += usbskt2['qnt']
-            context3 = {"user_basket_count": equation,  'username': username, 'total_price': finalprice, 'purchase_message': "Card Information invalid"}    
+            context3 = {"user_basket_count": equation,  'username': username, 'total_price': finalprice, 'purchase_message': "Card Information invalid"} 
+            return render(request, "purchase.html", context3)    
     except Exception as e:
-        context2 = {'products': basket}
-        finalprice = 0
-        equation = 0
         print(e)
-        for usbskt2 in basket:
-            wanyama = int(float((usbskt2['price'])))
-            price_prod  = usbskt2['qnt'] * wanyama
-            finalprice += price_prod  
-            for usbskt2 in basket:
-                equation += usbskt2['qnt']
-            context3 = {"user_basket_count": equation,  'username': username, 'total_price': finalprice, 'purchase_message': "Error on server side, please retry."}
-            return render(request, "purchase.html", context3)
+        return render(request, "custlogin.html", {'login_message': 'Please login before paying'}) 
 
 def add_product(request):
     username = request.session['username']  
@@ -917,13 +1014,13 @@ def add_product(request):
                 }
         insert = db.Products.insert_one(file)
         if insert:
-            
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
+            orders = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
             logger.info(f"New product {name} added to avaliable products.")
-            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Successfully added {name} to Products!"}
+            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Successfully added {name} to Products!", 'orderquery': orders}
             return render(request, "adminpanel.html", context3)
     else:
         return HttpResponse(status=403)
@@ -933,7 +1030,7 @@ def cancelorder(request):
     prodlist = post.get('prodlist')
     try:
         if request.session['username'] is None:
-            return render(request, "custlogin.html")
+            return render(request, "custlogin.html", {'login_message': 'Please login before cancelling order'})
         else:
             db = get_db()
             username = request.session['username']
@@ -941,19 +1038,20 @@ def cancelorder(request):
             equation = 0
             for usbskt2 in basket:
                 equation += usbskt2['qnt']
-            delete = list(db.Orders.delete_one({"prodlist": prodlist}))
+            db.Orders.delete_one({"products": prodlist})
             orders = list(db.Orders.find({"username": username}))
+            statusorder = value_grab(orders)
             logger.info(f"Order from {username} cancelled for {prodlist}.")
-            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation}
+            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, 'account_message': f"Successfully deleted {prodlist} for {username}", "statuslist": statusorder}
             return render(request, "account.html", context3)
     except Exception as e:
         username = request.session['username']
         equation = 0
-        print(e)
         for usbskt2 in basket:
             equation += usbskt2['qnt']
         orders = list(db.Orders.find({"username": username}))
-        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation}
+        statusorder = value_grab(orders)
+        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Error deleting this try again.", "statuslist": statusorder}
         return render(request, "account.html", context3)
 
 def logout(request):
@@ -976,15 +1074,16 @@ def account(request):
             for usbskt2 in basket:
                 equation += usbskt2['qnt']
             orders = list(db.Orders.find({"username": username}))
-            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation}
+            statusorder = value_grab(orders)
+            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "statuslist": statusorder }
             return render(request, "account.html", context3)
     except Exception as e:
-        return render(request, "custlogin.html")
+        return render(request, "custlogin.html", {'login_message': 'Please login first'})
     
 def change_pass(request):
     try:
         username = request.session['username']
-        if request.session['username']:
+        if request.session['username'] == sanitise_input(data.get('username')):
             db = get_db()
             data = request.POST
             username = sanitise_input(data.get('username'))
@@ -1028,36 +1127,39 @@ def change_pass(request):
                                             for usbskt2 in basket:
                                                 equation += usbskt2['qnt']
                                             orders = list(db.Orders.find({"username": username}))
+                                            statusorder = value_grab(orders)
                                             logger.info(f"{username}'s password has been updated to a new value.")
-                                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Password updated!"}
+                                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Password updated!", "statuslist": statusorder }
                                             return render(request, "account.html", context3)
                                     else:
                                         equation = 0
-                                
                                         orders = list(db.Orders.find({"username": username}))
-                                        logger.error(f"Failed password change for {username}.")
-                                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry"}
+                                        statusorder = value_grab(orders)
+                                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry", "statuslist": statusorder }
                                         return render(request, "account.html", context3)
                                     
                                 else:
                                     equation = 0
                                     orders = list(db.Orders.find({"username": username}))
                                     logger.error(f"Failed password change for {username}.")
-                                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry"}
+                                    statusorder = value_grab(orders)
+                                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry", "statuslist": statusorder }
                                     return render(request, "account.html", context3)
                         else:
                             equation = 0
                             orders = list(db.Orders.find({"username": username}))
                             logger.error(f"Failed password change for {username}.")
-                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match or are not strong enough."}
+                            statusorder = value_grab(orders)
+                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match or are not strong enough.", "statuslist": statusorder }
                             return render(request, "account.html", context3)
                     else:
                         equation = 0
                         for usbskt2 in basket:
                             equation += usbskt2['qnt']
                         orders = list(db.Orders.find({"username": username}))
+                        statusorder = value_grab(orders)
                         logger.error(f"User {request.session['username']} attempted to change account password that wasn't them.")
-                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "User attempted to change password for not their account."}
+                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "User attempted to change password for not their account.", "statuslist": statusorder }
                         return render(request, "custlogin.html", context3)   
                 else:
                     basket = request.session['baskets'][username]
@@ -1065,7 +1167,8 @@ def change_pass(request):
                     for usbskt2 in basket:
                         equation += usbskt2['qnt']
                     orders = list(db.Orders.find({"username": username}))
-                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "New password isn't strong enough."}
+                    statusorder = value_grab(orders)
+                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "New password isn't strong enough.", "statuslist": statusorder }
                     return render(request, "account.html", context3)
             else:
                 try:
@@ -1089,7 +1192,7 @@ def change_pass(request):
                                     "password": clean_hash,
 
                                     }
-                                    update = db.Logins.update_one(
+                                    db.Logins.update_one(
                                     {"username": username}, 
                                     {"$set": update}       
                                     )
@@ -1099,24 +1202,20 @@ def change_pass(request):
                                         context3 = {"login_message": "Password updated!"}
                                         return render(request, "custlogin.html", context3)
                 except Exception as e:
-                    username = request.session['username']
+                    print(e)
                     equation = 0
-                    orders = list(db.Orders.find({"username": username}))
-                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Server error occured, please retry."}
-                    return render(request, "changepass.html", context3)    
-
+                    context3 = {"custlogin.html": "Please login before trying to change your pass."}
+                    return render(request, "custlogin.html", context3)    
         else:
             equation = 0
-            orders = list(db.Orders.find({"username": username}))
-            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Account cannot be found."}
-            return render(request, "account.html", context3)
-            
+            context3 = {"login_message": "Please login before trying to change your pass"}
+            return render(request, "custlogin.html", context3)    
+           
     except Exception as e:
-        username = request.session['username']
+        print(e)
         equation = 0
-        orders = list(db.Orders.find({"username": username}))
-        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Server error occured, please retry."}
-        return render(request, "account.html", context3)
+        context3 = {"login_message": "Please login before trying to change your pass"}
+        return render(request, "custlogin.html", context3)
 
 def add_stock(request): 
     username2 = request.session['username']
@@ -1131,6 +1230,7 @@ def add_stock(request):
             {'$inc': {'productStock': no}})
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
+            orderquery = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
             logger.info(f"Product {name} has had its stock increased by {no}.")
@@ -1139,6 +1239,7 @@ def add_stock(request):
         else:
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
+            orderquery = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
             context3 = {'productquery': context2, 'userquery': context, 'username': name, 'Update_Message': f"Product {name} not found!"}
@@ -1183,6 +1284,25 @@ def change_role(request):
     else:
         logger.critical(f"{username} attempted to perform an action they were not authorised to do.")
         return HttpResponse(status=403)
+    
+
+def value_grab(orders):
+    statuses = [order['status'] for order in orders]
+    statusorder = []
+    for status in statuses:
+        if status == "Order confirmed":
+            value = 0
+            statusorder.append({"value": value})
+        if status == "Left the warehouse":
+            value = 35
+            statusorder.append({"value": value})
+        if status == "Dispatched to courier":
+            value = 65
+            statusorder.append({"value": value})
+        if status == "Out for delivery":
+            value = 100
+            statusorder.append({"value": value})
+    return statusorder
 
 db = get_db()
 usr_list = db.Logins.find({}, {"username": 1, '_id': 0})

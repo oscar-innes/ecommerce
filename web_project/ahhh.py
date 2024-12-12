@@ -17,7 +17,7 @@ def create_collection(coll_name):
                 "encsortcode",
                 "status",
                 "timestamp",
-                "house number",
+                "house_number",
                 "address",
                 "citytown",
                 "postcode",
@@ -32,6 +32,14 @@ def create_collection(coll_name):
                     "description": "must be a string representing the username and is required, between 1 and 50 characters"
                 },
                 "products": {
+                    "bsonType": "string",
+                    "description": "id of the object inside mongodb"
+                },
+                "encdate": {
+                    "bsonType": "string",
+                    "description": "id of the object inside mongodb"
+                },
+                "encname": {
                     "bsonType": "string",
                     "description": "id of the object inside mongodb"
                 },

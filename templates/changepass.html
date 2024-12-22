@@ -9,6 +9,8 @@
 <h1 align="center">Change password for account </h1>
 
 
+{{change_error}}
+
 <form method="post" action="{% url 'changepass' %}">
     {% csrf_token %}
     <div class="mb-3 row justify-content-center align-items-center">
@@ -19,7 +21,7 @@
         </div>
         <div style="width: 180px; row w-100">
             <div class="col-sm-20 offset-sm-22 mb-22">
-                <input type="password" class="form-control" name="newpassword" placeholder="New Password"><br>
+                <input type="password" class="form-control" name="newpass" placeholder="New Password"><br>
             </div>
         </div>
         <div style="width: 180px; row w-100">

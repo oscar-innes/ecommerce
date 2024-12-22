@@ -30,11 +30,84 @@ import atexit
 import sendgrid
 from sendgrid.helpers.mail import Content, Email, Mail
 from sendgrid.helpers.mail import Mail, Email, Content, To, From
+import stripe
+from django.http.response import JsonResponse # new
+from django.views.decorators.csrf import csrf_exempt # new
+from django.views.generic.base import TemplateView
+from django.conf import settings
+import traceback
+
+def card_check(sort_code, account_no, cvv, date):
+    acc2 = int(account_no)
+    reggie = r'^[1-9]{2}\s?\-?[1-9]{2}\s?\-?[1-9]{2}$'
+    if acc2 >= 100000000000 and acc2 <= 999999999999:
+        if len(cvv) == 3:
+            if re.match(reggie, sort_code):
+                month = date[:4]
+                year = date[5:7]
+                if int(year) > datetime.datetime.now().year and int(month) > datetime.datetime.now().month:
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return False
+    else:
+        return False
+
+
+def create_stripe_order(amount, prodlist, username):
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                mode='payment',
+                client_reference_id=username,
+                success_url="http://127.0.0.1:8000/",  
+                cancel_url="http://127.0.0.1:8000/contact/",
+                line_items =[{
+                    'price_data': {
+                        'currency': "usd",
+                        'product_data': {
+                            'name': f'{username} ordered {prodlist}',  
+                        },
+                        'unit_amount': amount, 
+                    },
+                    'quantity': 1,
+                }],
+        )
+
+        stripe.PaymentIntent.create(
+            amount=amount,
+            currency="usd",
+            automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+            description=f"{username} ordered {prodlist}"
+        )
+        return True
+
+    except Exception as e:
+            return False
+
+def create_stripe_product(name, price, desc):
+    try:
+        cents = int(price * 100)
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        product = stripe.Product.create(
+                name=name,
+                description=desc
+        )
+        prodprice = stripe.Price.create(
+            product=product['id'],
+            unit_amount=cents,
+            currency="usd"  # Change to your preferred currency
+        )
+    except stripe.error.StripeError as e:
+        return False
 
 def fix_email(email):
     email = re.sub(r'@(\w+)(com)', r'@\1.\2', email) 
     return email
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +119,6 @@ def is_otp_valid(username, secret, user_otp):
 def get_b64encoded_qr_image(data):
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)
-    qr.make(fit=True)
     img = qr.make_image(fill_color='black', back_color='white')
     buffered = BytesIO()
     img.save(buffered)
@@ -55,29 +127,27 @@ def get_b64encoded_qr_image(data):
 def forgot_pass(request):
     db = get_db()
     hi = request.POST
-    username = hi.get('user2')
-    email = hi.get('email')
+    username = sanitise_input(hi.get('user2'))
+    email = sanitise_input(hi.get('email'))
     k = db.Logins.find_one({"username": username})
     try:
         if k:
             email_to_decrypt = k.get("email")
             vector = k.get("vector")
-            actualemail = decrypt_customers(username, email_to_decrypt, vector) 
-            generated_code = random.randint(100000000000, 999999999999)
-            actualemail = fix_email(actualemail) #only gmail emails atm do fix. the .'s in other emails cause problems when retrieved from database
-            if actualemail == email:
+            generated_code = random.randint(100000000000, 999999999999) 
+            if email == email_to_decrypt:
                 sg = sendgrid.SendGridAPIClient(os.environ.get("SENDGRID_API_KEY")
                 )
                 from_email = From("innesoscar@gmail.com")
-                to_email = To(actualemail)
+                to_email = To(fix_email(email))
                 subject = f"Code for account {username}"
                 content = Content(
                 "text/plain", f"Code for your account {generated_code}"
                 )
                 mail = Mail(from_email, to_email, subject, content)
                 response = sg.client.mail.send.post(request_body=mail.get())
-                code = request.session[username][generated_code]
-                context = {"username": username, "email": email}
+                request.session['generated_code'] = generated_code
+                context = {"username": username, "email": email, 'code': generated_code}
                 logger.info(f"{username} logged in and accessed admin panel.")
                 return render(request, "verifyemail.html", context)
             else:
@@ -86,33 +156,31 @@ def forgot_pass(request):
         else:
             context = {"login_message": "Error occured, No such user exists."}
             return render(request, "custlogin.html", context)
-
     except Exception as e:
         context = {"login_message": "Error occured, ensure you have inputted valid email."}
         return render(request, "custlogin.html", context)
 
 def verify_change(request):
-    db = get_db()
     hi = request.POST
-    code = hi.get('code')
-    user3 = hi.get('user3')
-    email = hi.get('email')
+    code = sanitise_input(hi.get('code'))
+    user3 = sanitise_input(hi.get('user3'))
     try:
         if user3 != None:
-            if code == request.session['username'][code]:
+            code2 = request.session['generated_code']
+            if int(code) == int(code2):
                 context = {"username": user3}
-                del request.session['username'][code]
+                del request.session['generated_code']
                 request.session['codeaccepted'] = True
                 request.session['username'] = user3
                 return render(request, "changepass.html", context)
             else:
-                context = {"code": code, "username": user3, "email": email}
+                context = {"code": code, "username": user3}
                 return render(request, "verifyemail.html", context)
         else:
-            context = {"code": code, "username": user3, "email": email}
+            context = {"code": code, "username": user3}
             return render(request, "verifyemail.html", context)
     except Exception as e:
-        return render(request, "custlogin.html", context)
+        return render(request, "custlogin.html", {'login_message': 'Did not match code'})
 
 def order_status(request):
     try:
@@ -198,12 +266,11 @@ def verify2fa(request, username):
     db = get_db()
     hi = request.POST
     k = db.Logins.find_one({"username": username})
-    otp = hi.get('otp')
+    otp = sanitise_input(hi.get('otp'))
     try:
         if k:
             sec = k.get('secret_token')
             if is_otp_valid(username, sec, otp):
-                print("2FA verification successful!!")
                 request.session['username'] = username
                 basket = request.session['baskets'][username]
                 equation = 0
@@ -251,31 +318,6 @@ def role_check2(username):
     else:
         return False
     
-def card_check(sort_code, account_no, cvv, date):
-    acc2 = int(account_no)
-    reggie = r'^[1-9]{2}\s?\-?[1-9]{2}\s?\-?[1-9]{2}$'
-    if acc2 >= 100000000000 and acc2 <= 999999999999:
-        if len(cvv) == 3:
-            if re.match(reggie, sort_code):
-                month = date[:4]
-                year = date[5:7]
-                print(year)
-                print(month)
-                if int(year) > datetime.datetime.now().year and int(month) > datetime.datetime.now().month:
-                    print("date error")
-                    return False
-                else:
-                    return True
-            else:
-                print("sortcode")
-                return False
-        else:
-            print("cvv error")
-            return False
-    else:
-        print("acc number error") 
-        return False
-                
 def sanitise_no(input):
   try:
     no = float(input)
@@ -291,8 +333,6 @@ def sanitise_no(input):
 def update_keys(username):
     if username not in login_attempts:
         login_attempts[username] = 0
-
-    
 
 def password_check(password):
     if not re.search(r'[A-Z]', password):
@@ -338,13 +378,6 @@ def encrypt_customers(username, input, vector):
     ex2_element = salty.hex()
     return ex2_element
 
-def decrypt_customers(username, input, vector):
-    salty = bytes.fromhex(input)
-    nonce = bytes.fromhex(vector)
-    encrypt = hashlib.sha256(username.encode()).digest()
-    aes = AES.new(encrypt, AES.MODE_GCM, nonce=nonce)
-    plaintext = aes.decrypt(salty)
-    return plaintext.decode('utf-8') 
 
 def create_hash(password, salt):
     sha = hashlib.sha512()
@@ -357,7 +390,7 @@ def create_hash(password, salt):
 def sanitise_input(string):
     return re.sub('[../+\\n+\\r"\\\']*', '', string)
 
-def check_details(username, email, number):
+def check_details(username, email):
     db = get_db()
     try:
         if db.Logins.find_one({"username": username}) or db.Logins.find_one({"email": email}):
@@ -423,7 +456,6 @@ def products(request):
         ##I think this is involving pulling the products
         return render(request, "products.html", context3)
     except Exception as e:
-        print(e)
         return render(request, "products.html")
         
 def cust_login(request): 
@@ -438,6 +470,7 @@ def cust_login(request):
     
 def delete_file(request): 
     try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
         username = request.session['username']
         if role_check(username):
             db = get_db()
@@ -451,6 +484,12 @@ def delete_file(request):
                 orders = list(db.Orders.find({}))
                 context= {'users': userquery}
                 context2 = {'products': userproducts}
+                danjuma = stripe.Product.search(query=f"active:'true' AND name:'{userindex}'")
+                if danjuma.data:
+                    identifier = danjuma.data[0].id  
+                    stripe.Product.delete(identifier)
+                else:
+                    pass
                 logger.info(f"Product {userindex} deleted.")
                 context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product deleted.", 'orderquery':orders}
                 return render(request, "adminpanel.html", context3)
@@ -524,6 +563,7 @@ def postlogin(request):
                             return render(request, "adminpanel.html", context3)
                         else:
                             basket = request.session['baskets'][username]
+                            request.session['username'] = username
                             login_attempts[username] == 0
                             equation = 0
                             for usbskt2 in basket:
@@ -542,7 +582,6 @@ def postlogin(request):
         else:
             return render(request, "custlogin.html", {'login_message': 'user does not exist'})
     except Exception as e:
-        print(e)
         return render(request, "custlogin.html", {'login_message': 'Server error, contact support'})
     
 def admin(request):
@@ -586,13 +625,12 @@ def postregis(request):
                     clean_hash = hashed.decode('utf-8')
                     secret_token = pyotp.random_base32()
                     encsalt, vector = encrypt_salt(username, salt)
-                    encemail = encrypt_customers(username, email, vector)
                     encnumber = encrypt_customers(username, phone_number, vector)
                     encaddress = encrypt_customers(username, address, vector)
                     file = {
                         "username": f"{username}",
                         "password": f"{clean_hash}",
-                        "email": f"{encemail}",
+                        "email": f"{email}",
                         "address": f"{encaddress}",
                         "phone_number": f"{encnumber}",
                         "salt": f"{encsalt}",
@@ -602,7 +640,7 @@ def postregis(request):
                     }
                     try:
                             message = "Login information inserted successfully."
-                            check = check_details(username, encemail, encnumber)
+                            check = check_details(username, email)
                             if check == True:
                                     try:
                                         insert = db.Logins.insert_one(file)
@@ -629,7 +667,7 @@ def postregis(request):
 
 
                                     except Exception as e:
-                                        return render(request, "registration.html", {'register_message': f'{e}'})
+                                        return render(request, "registration.html", {'register_message': 'Unexpected error occured, please retry'})
                             else:
                                 return render(request, "registration.html", {'register_message': f'Field in submission already in database'})
                     except Exception as e:
@@ -647,14 +685,13 @@ def postregis(request):
                     hashed = create_hash(password, salt)
                     clean_hash = hashed.decode('utf-8')
                     encsalt, vector = encrypt_salt(username, salt)
-                    encemail = encrypt_customers(username, email, vector)
                     encnumber = encrypt_customers(username, phone_number, vector)
                     encaddress = encrypt_customers(username, address, vector)
                     secret_token = "no"
                     file = {
                         "username": f"{username}",
                         "password": f"{clean_hash}",
-                        "email": f"{encemail}",
+                        "email": f"{email}",
                         "address": f"{encnumber}",
                         "phone_number": f"{encaddress}",
                         "salt": f"{encsalt}",
@@ -663,7 +700,7 @@ def postregis(request):
                         "role": "customer"
                     }
                     try:
-                        check = check_details(username, encemail, encnumber)
+                        check = check_details(username, email)
                         if check == True:
                             insert = db.Logins.insert_one(file)
                             update_keys(username)
@@ -687,7 +724,17 @@ def postregis(request):
         return render(request, "registration.html", {'register_message': 'error, passwords not correct length'})
      
 def registration(request): 
-    return render(request, "registration.html")
+    try:
+        username2 = request.session['username']
+        basket = request.session['baskets'][username2]
+        equation = 0
+        for usbskt2 in basket:
+            equation += usbskt2['qnt']
+        context = {'username': username2, 'user_basket_count': equation}
+        return render(request, "registration.html", context)
+    except Exception as e:
+        return render(request, "registration.html")
+
         
 def add1item(request, product_name):
     try: 
@@ -707,7 +754,7 @@ def add1item(request, product_name):
                         finalprice = 0
                         equation = 0
                         for usbskt2 in basket:
-                            wanyama = int(float((usbskt2['price'])))
+                            wanyama = float((usbskt2['price']))
                             price_prod  = usbskt2['qnt'] * wanyama
                             finalprice += price_prod  
                         for usbskt2 in basket:
@@ -719,7 +766,7 @@ def add1item(request, product_name):
                         finalprice = 0
                         equation = 0
                         for usbskt2 in basket:
-                            wanyama = int(float((usbskt2['price'])))
+                            wanyama = float((usbskt2['price']))
                             price_prod  = usbskt2['qnt'] * wanyama
                             finalprice += price_prod  
                         for usbskt2 in basket:
@@ -752,7 +799,7 @@ def remove1item(request, product_name):
                         finalprice = 0
                         equation = 0
                         for usbskt2 in basket:
-                            wanyama = int(float((usbskt2['price'])))
+                            wanyama = float((usbskt2['price']))
                             price_prod  = usbskt2['qnt'] * wanyama
                             finalprice += price_prod  
                         for usbskt2 in basket:
@@ -764,7 +811,7 @@ def remove1item(request, product_name):
                         finalprice = 0
                         equation = 0
                         for usbskt2 in basket:
-                            wanyama = int(float((usbskt2['price'])))
+                            wanyama = float((usbskt2['price']))
                             price_prod  = usbskt2['qnt'] * wanyama
                             finalprice += price_prod  
                         for usbskt2 in basket:
@@ -802,7 +849,7 @@ def basket(request):
         finalprice = 0
         equation = 0
         for usbskt2 in basket:
-            wanyama = int(float((usbskt2['price'])))
+            wanyama = float((usbskt2['price']))
             price_prod  = usbskt2['qnt'] * wanyama
             finalprice += price_prod  
         for usbskt2 in basket:
@@ -822,9 +869,9 @@ def add_to_cart(request):
             username = request.session['username']
             basket = request.session['baskets'][username]
             db = get_db()
-            name = request.POST.get('product_name')
-            image = request.POST.get('product_image')
-            price = request.POST.get('product_price')
+            name = sanitise_input(request.POST.get('product_name'))
+            image = sanitise_input(request.POST.get('product_image'))
+            price = sanitise_no(request.POST.get('product_price'))
             product = {"name": name,
             "price": price,
             "image": image,
@@ -879,7 +926,7 @@ def payment(request): #were gonna do login logic here
         finalprice = 0
         equation = 0
         for usbskt2 in basket:
-            wanyama = int(float((usbskt2['price'])))
+            wanyama = float((usbskt2['price']))
             price_prod  = usbskt2['qnt'] * wanyama
             finalprice += price_prod  
         for usbskt2 in basket:
@@ -902,26 +949,21 @@ def paynow(request):
         db = get_db()
         data = request.POST
         accno = sanitise_input(data.get('accountno'))
-        srtcode = sanitise_input(data.get('sortcode'))
+        price = sanitise_input(data.get('pricey'))
         cvv = sanitise_input(data.get('cvv2'))
         expiry = sanitise_input(str(data.get('expiry')))
-        name = sanitise_input(data.get('name'))
         shipping_address = sanitise_input(data.get('address'))
         cityortown = sanitise_input(data.get('citytown'))
+        sortcode = sanitise_input(data.get('sortcode'))
         houseno = sanitise_input(data.get('houseno'))
         postcode = sanitise_input(data.get('postcode'))
         country = sanitise_input(data.get('country'))
         username = request.session['username']
         basket = request.session['baskets'][username]
         exists = db.Logins.find_one({"username": f"{username}"})
-        if exists and card_check(srtcode, accno, cvv, expiry):
+        if exists and card_check(sortcode, accno, cvv, expiry):
             vector = exists.get("vector")
             email = exists.get("email")
-            enccvv = encrypt_customers(username, cvv, vector)
-            encname = encrypt_customers(username, name, vector)
-            encexpiry = encrypt_customers(username, cvv, vector)
-            encaccountno = encrypt_customers(username, accno, vector)
-            encsortcode = encrypt_customers(username, srtcode, vector)
             current_datetime = datetime.datetime.now()
             thedate = current_datetime.date().strftime(
             '%d/%m/%Y')  #grab and apply the date and time
@@ -933,11 +975,6 @@ def paynow(request):
             file = {
                     "username": f"{username}",
                     "products": f"{prodstring}",
-                    "encdate": f"{encexpiry}",
-                    "encname": f"{encname}",
-                    "encaccnumber": f"{encaccountno}",
-                    "enccvv": f"{enccvv}",
-                    "encsortcode": f"{encsortcode}",
                     "status": 'Order confirmed',
                     "timestamp": f"{thedatetime}",
                     "house_number": f"{houseno}",
@@ -946,16 +983,19 @@ def paynow(request):
                     "postcode": f"{postcode}",
                     "country": f"{country}",
                     "email": f"{email}"
-                }
+            }
+            stripe.api_key = settings.STRIPE_SECRET_KEY
             insert = db.Orders.insert_one(file)
-             #if we were doing the realisitic card transfer it would involve the api to subtract money from a card, but this is fake for purposes of cw so we cant use stripe or something like that.
-            if insert:  
+            expiry.split('/')
+            stripeinsert = create_stripe_order(price, prodstring, username)
+            if stripeinsert == True and insert:  
                 for item in basket:
                     check = db.Products.find_one({"productName": item['name']})
                     grab = check.get("productStock")
                     db.Products.update_one(
                         {"productName": item['name']},  
-                        {"$inc": {"productStock": -item['qnt']}})
+                        {"$inc": {"productStock": -item['qnt']}}
+                    )
                 basket.clear()
                 request.session['baskets'][username] = basket
                 request.session.modified = True
@@ -969,7 +1009,7 @@ def paynow(request):
                 finalprice = 0
                 equation = 0
                 for usbskt2 in basket:
-                    wanyama = int(float((usbskt2['price'])))
+                    wanyama = float((usbskt2['price']))
                     price_prod  = usbskt2['qnt'] * wanyama
                     finalprice += price_prod  
                 for usbskt2 in basket:
@@ -982,16 +1022,15 @@ def paynow(request):
             finalprice = 0
             equation = 0
             for usbskt2 in basket:
-                wanyama = int(float((usbskt2['price'])))
+                wanyama = float((usbskt2['price']))
                 price_prod  = usbskt2['qnt'] * wanyama
                 finalprice += price_prod  
             for usbskt2 in basket:
                 equation += usbskt2['qnt']
-            context3 = {"user_basket_count": equation,  'username': username, 'total_price': finalprice, 'purchase_message': "Card Information invalid"} 
+            context3 = {"user_basket_count": equation,  'username': username, 'total_price': finalprice, 'purchase_message': "Card or user Information invalid"} 
             return render(request, "purchase.html", context3)    
     except Exception as e:
-        print(e)
-        return render(request, "custlogin.html", {'login_message': 'Please login before paying'}) 
+        return render(request, "custlogin.html", {'login_message': 'Please login before you pay'})
 
 def add_product(request):
     username = request.session['username']  
@@ -1014,6 +1053,7 @@ def add_product(request):
                 }
         insert = db.Products.insert_one(file)
         if insert:
+            create_stripe_product(name, price, desc)
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
             orders = list(db.Orders.find({}))
@@ -1082,137 +1122,93 @@ def account(request):
     
 def change_pass(request):
     try:
+        data = request.POST
         username = request.session['username']
-        if request.session['username'] == sanitise_input(data.get('username')):
-            db = get_db()
+        db = get_db()
+        if username == sanitise_input(data.get('username')):
             data = request.POST
             username = sanitise_input(data.get('username'))
-            if data.get('password'):
-                passwordog = sanitise_input(data.get('password'))
-                newpass = sanitise_input(data.get('newpassword'))
+            if sanitise_input(data.get('newpass')):
+                newpass = sanitise_input(data.get('newpass'))
                 repeatnew = sanitise_input(data.get('repeatnew'))
                 userfind = db.Logins.find_one({"username": username})
-                basket = request.session['baskets'][username]
-                if username == request.session['username']:
-                    if userfind:
-                        correct_length = check_password(newpass) 
-                        passw, strengthmessage = password_check(newpass)
-                        if correct_length and passw != False:
-                                passy = userfind.get("password")
-                                salty = userfind.get("salt")
-                                vector = userfind.get("vector")
-                                salt2 = unencrypt_salt(username, salty, vector)
-                                check = create_hash(passwordog, salt2)
-                                string_value = check.decode('utf-8')
-                                wham2 = str(string_value)
-                                if wham2 == passy:
-                                    if newpass == repeatnew:
-                                        salt = generate_salt()
-                                        hashed = create_hash(newpass, salt)
-                                        clean_hash = hashed.decode('utf-8')
-                                        encsalt, victor = encrypt_salt(username, salt)
-                                        update = {
-                                        "salt": encsalt,
-                                        "vector": victor,
-                                        "password": clean_hash,
+                if userfind:
+                    correct_length = check_password(newpass) 
+                    passw, strengthmessage = password_check(newpass)
+                    if correct_length and passw != False:
+                        if newpass == repeatnew:
+                            salt = generate_salt()
+                            hashed = create_hash(newpass, salt)
+                            clean_hash = hashed.decode('utf-8')
+                            encsalt, victor = encrypt_salt(username, salt)
+                            update = {
+                            "salt": encsalt,
+                            "vector": victor,
+                            "password": clean_hash,
 
-                                        }
-                                        update = db.Logins.update_one(
-                                        {"username": username}, 
-                                        {"$set": update}       
-                                        )
-                                        if update:
-                                            username = request.session['username']
-                                            equation = 0
-                                            for usbskt2 in basket:
-                                                equation += usbskt2['qnt']
-                                            orders = list(db.Orders.find({"username": username}))
-                                            statusorder = value_grab(orders)
-                                            logger.info(f"{username}'s password has been updated to a new value.")
-                                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Password updated!", "statuslist": statusorder }
-                                            return render(request, "account.html", context3)
-                                    else:
-                                        equation = 0
-                                        orders = list(db.Orders.find({"username": username}))
-                                        statusorder = value_grab(orders)
-                                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry", "statuslist": statusorder }
-                                        return render(request, "account.html", context3)
+                            }
+                            update = db.Logins.update_one(
+                            {"username": username}, 
+                            {"$set": update}       
+                            )
+                            basket = create_basket(request, request.session, username)
+                            if update:
+                                username = request.session['username']
+                                basket = request.session['baskets'][username]
+                                equation = 0
+                                for usbskt2 in basket:
+                                    equation += usbskt2['qnt']
+                                orders = list(db.Orders.find({"username": username}))
+                                statusorder = value_grab(orders)
+                                logger.info(f"{username}'s password has been updated to a new value.")
+                                context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Password updated!", "statuslist": statusorder }
+                                return render(request, "account.html", context3)
+                            else:
+                                equation = 0
+                                basket = request.session['baskets'][username]
+                                orders = list(db.Orders.find({"username": username}))
+                                statusorder = value_grab(orders)
+                                context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry", "statuslist": statusorder }
+                                return render(request, "changepass.html", context3)
                                     
-                                else:
-                                    equation = 0
-                                    orders = list(db.Orders.find({"username": username}))
-                                    logger.error(f"Failed password change for {username}.")
-                                    statusorder = value_grab(orders)
-                                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match, retry", "statuslist": statusorder }
-                                    return render(request, "account.html", context3)
                         else:
                             equation = 0
                             orders = list(db.Orders.find({"username": username}))
                             logger.error(f"Failed password change for {username}.")
                             statusorder = value_grab(orders)
-                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "Passwords do not match or are not strong enough.", "statuslist": statusorder }
-                            return render(request, "account.html", context3)
+                            context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "change_error": "Passwords do not match, retry", "statuslist": statusorder }
+                            return render(request, "changepass.html", context3)
                     else:
                         equation = 0
-                        for usbskt2 in basket:
-                            equation += usbskt2['qnt']
                         orders = list(db.Orders.find({"username": username}))
+                        logger.error(f"Failed password change for {username}.")
                         statusorder = value_grab(orders)
-                        logger.error(f"User {request.session['username']} attempted to change account password that wasn't them.")
-                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "User attempted to change password for not their account.", "statuslist": statusorder }
-                        return render(request, "custlogin.html", context3)   
+                        context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "change_error": "Passwords do not match or are not strong enough.", "statuslist": statusorder }
+                        return render(request, "changepass.html", context3)
                 else:
-                    basket = request.session['baskets'][username]
                     equation = 0
                     for usbskt2 in basket:
                         equation += usbskt2['qnt']
                     orders = list(db.Orders.find({"username": username}))
                     statusorder = value_grab(orders)
-                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "New password isn't strong enough.", "statuslist": statusorder }
-                    return render(request, "account.html", context3)
+                    logger.error(f"User {request.session['username']} attempted to change account password that wasn't them.")
+                    context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "User attempted to change password for not their account.", "statuslist": statusorder }
+                    return render(request, "custlogin.html", context3)   
             else:
-                try:
-                    newpass = sanitise_input(data.get('newpassword'))
-                    repeatnew = sanitise_input(data.get('repeatnew'))
-                    userfind = db.Logins.find_one({"username": username})
-                    username = request.session['username']
-                    if username == request.session['username']:
-                        if userfind:
-                            correct_length = check_password(newpass)
-                            passw, strengthmessage = password_check(newpass)
-                            if correct_length and passw != False:
-                                if newpass == repeatnew and request.session['codeaccepted'] == True:
-                                    salt = generate_salt()
-                                    hashed = create_hash(newpass, salt)
-                                    clean_hash = hashed.decode('utf-8')
-                                    encsalt, victor = encrypt_salt(username, salt)
-                                    update = {
-                                    "salt": encsalt,
-                                    "vector": victor,
-                                    "password": clean_hash,
-
-                                    }
-                                    db.Logins.update_one(
-                                    {"username": username}, 
-                                    {"$set": update}       
-                                    )
-                                    if update:
-                                        request.session['username'] = None
-                                        logger.info(f"{username}'s password has been updated to a new value.")
-                                        context3 = {"login_message": "Password updated!"}
-                                        return render(request, "custlogin.html", context3)
-                except Exception as e:
-                    print(e)
-                    equation = 0
-                    context3 = {"custlogin.html": "Please login before trying to change your pass."}
-                    return render(request, "custlogin.html", context3)    
+                basket = request.session['baskets'][username]
+                equation = 0
+                for usbskt2 in basket:
+                    equation += usbskt2['qnt']
+                orders = list(db.Orders.find({"username": username}))
+                statusorder = value_grab(orders)
+                context3 = {'orderquery': orders, 'username': username, 'user_basket_count': equation, "account_message": "New password isn't strong enough.", "statuslist": statusorder }
+                return render(request, "changepass.html", context3) 
         else:
             equation = 0
             context3 = {"login_message": "Please login before trying to change your pass"}
             return render(request, "custlogin.html", context3)    
            
     except Exception as e:
-        print(e)
         equation = 0
         context3 = {"login_message": "Please login before trying to change your pass"}
         return render(request, "custlogin.html", context3)

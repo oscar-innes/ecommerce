@@ -22,9 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECURE_CART_KEY')
+SENDGRID_KEY = os.environ.get("SENDGRID_API_KEY")
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -159,8 +162,8 @@ LOGIN_URL = '/login/'  # Redirect unauthenticated users to the login page
 LOGIN_REDIRECT_URL = '/'
 
 SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False  # Allow session cookies to be sent over HTTP
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = True  # Allow session cookies to be sent over HTTP
+CSRF_COOKIE_SECURE = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 1800
 

@@ -14,39 +14,39 @@
     
 {% block content %}
 
-    {{  Update_Message }}
+{{  Update_Message }}
 
 
-    <div class="grid text-center" style="--bs-columns: 3;">
-        <div class="row text-center">
-            {% for product in productquery.products %}
-            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                <form method="post" action="{% url 'add_to_cart' %}">
-                    {% csrf_token %}
-                    <div class="card h-50" style="width: 18rem;"> 
-                        <h2 class="card-header bg-info text-white" name="naming">{{ product.productName }}</h2>
-                        <img src="{% static 'images/' %}{{ product.productImage }}.jpg" alt="{{ product.productName }}" class="card-img-top" name="item-image">
-                        <div class="card-body bg-info text-white">
-                            <h3 class="card-text" name="item-price"> ${{ product.productPrice }}</h3>
-                            <p class="card-text">{{ product.productDesc }}</p>
-                            <input type="hidden" name="product_name" value="{{ product.productName }}">
-                            <input type="hidden" name="product_image" value="{{ product.productImage }}">
-                            <input type="hidden" name="product_price" value="{{ product.productPrice }}">
-                            <input type="hidden" name="product_desc" value="{{ product.productDesc }}">
-                            <div class="Purchase-btn"><h2 class = "card-subtitle mb-2 text-body-secondary">Purchase NOW</h2>
-                                <button type="submit" class="btn btn-primary" role="button" required><span class="text">Add to cart</span>
-                            </div> 
-                        </div>
+<div class="container">
+    <div class="row g-9">
+        {% for product in productquery.products %}
+        <div class="col-md-10 d-flex justify-content-center">
+            <form method="post" action="{% url 'add_to_cart' %}">
+                {% csrf_token %}
+                <div class="card h-50" style="width: 18rem;"> 
+                    <h2 class="card-header bg-info text-white" name="naming">{{ product.productName }}</h2>
+                    <img src="{% static 'images/' %}{{ product.productImage }}.png" alt="{{ product.productName }}" class="card-img-top" name="item-image">
+                    <div class="card-body bg-info text-white">
+                        <h3 class="card-text" name="item-price"> ${{ product.productPrice }}</h3>
+                        <p class="card-text">{{ product.productDesc }}</p>
+                        <input type="hidden" name="product_name" value="{{ product.productName }}">
+                        <input type="hidden" name="product_image" value="{{ product.productImage }}">
+                        <input type="hidden" name="product_price" value="{{ product.productPrice }}">
+                        <input type="hidden" name="product_desc" value="{{ product.productDesc }}">
+                        <div class="Purchase-btn"><h2 class = "card-subtitle mb-2 text-body-secondary">Purchase NOW</h2>
+                            <button type="submit" class="btn btn-primary" role="button" required><span class="text">Add to cart</span>
+                        </div> 
                     </div>
-             </form>
-            {% empty %}
-            <div class="col-12">
-                <p>No products available.</p>
-            </div>
-            {% endfor %}
-        
+                </div>
+            </form>
+        {% empty %}
+        <div class="col-12">
+            <p>No products available.</p>
         </div>
+        {% endfor %}
     </div>
+</div>
+
 
 
 {% endblock content %}    

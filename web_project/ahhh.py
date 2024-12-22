@@ -12,9 +12,6 @@ def create_collection(coll_name):
             "bsonType": "object",
             "required": [
                 "username",
-                "encaccnumber",
-                "enccvv",
-                "encsortcode",
                 "status",
                 "timestamp",
                 "house_number",
@@ -34,26 +31,6 @@ def create_collection(coll_name):
                 "products": {
                     "bsonType": "string",
                     "description": "id of the object inside mongodb"
-                },
-                "encdate": {
-                    "bsonType": "string",
-                    "description": "id of the object inside mongodb"
-                },
-                "encname": {
-                    "bsonType": "string",
-                    "description": "id of the object inside mongodb"
-                },
-                "encaccnumber": {
-                    "bsonType": "string",
-                    "description": "must be a string representing the encrypted account number and is required"
-                },
-                "enccvv": {
-                    "bsonType": "string",
-                    "description": "must be a string representing the encrypted CVV and is required"
-                },
-                "encsortcode": {
-                    "bsonType": "string",
-                    "description": "must be a string representing the encrypted sort code and is required"
                 },
                 "status": {
                     "bsonType": "string",

@@ -199,3 +199,37 @@
 2024-12-22 12:56:07,058 [INFO] ccse.views: Account tomtayle created.
 2024-12-22 13:01:22,219 [INFO] ccse.views: guru successfully logged in
 2024-12-22 13:03:14,668 [INFO] ccse.views: Account tomtayle created.
+2024-12-22 13:18:26,593 [INFO] ccse.views: Payment from guru approved for  Product: Hotel Doorlocker x 1 .
+2024-12-22 13:20:59,414 [INFO] ccse.views: Product Dfqff deleted.
+2024-12-22 13:23:39,760 [INFO] ccse.views: New product Sandwich added to avaliable products.
+2024-12-22 13:24:19,958 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:25:31,697 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:31:47,484 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:33:47,629 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:39:00,640 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:39:35,049 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:41:45,947 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:42:57,412 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:43:43,097 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:45:08,746 [INFO] ccse.views: Deletion attempted by guru but did not succeed.
+2024-12-22 13:46:48,241 [INFO] ccse.views: Deletion attempted by guru but did not succeed.
+2024-12-22 13:47:14,523 [INFO] ccse.views: Deletion attempted by guru but did not succeed.
+2024-12-22 13:48:23,141 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:48:46,850 [CRITICAL] ccse.views: Attempted access admin page and was forbidden.
+2024-12-22 13:48:48,073 [CRITICAL] ccse.views: Attempted access admin page and was forbidden.
+2024-12-22 13:48:48,572 [CRITICAL] ccse.views: Attempted access admin page and was forbidden.
+2024-12-22 13:49:00,798 [INFO] ccse.views: guru successfully logged in
+2024-12-22 13:49:05,312 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:51:52,539 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:52:23,900 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 13:56:02,493 [CRITICAL] ccse.views: User Attempted access admin page and was forbidden.
+2024-12-22 17:27:11,429 [INFO] ccse.views: guru successfully logged in
+2024-12-22 17:28:02,798 [CRITICAL] ccse.views: guru attempted to use moderator powers to make someone an admin. This is not allowed.
+2024-12-22 17:28:23,788 [CRITICAL] ccse.views: guru attempted to use moderator powers to make someone an admin. This is not allowed.
+2024-12-22 17:28:39,212 [INFO] ccse.views: Order for guru updated to Left the warehouse.
+2024-12-22 17:29:05,745 [INFO] ccse.views: Order for guru updated to Dispatched to courier.
+2024-12-22 17:32:16,015 [INFO] ccse.views: Product IPv4 camera has had its stock increased by 2.
+2024-12-22 18:57:10,344 [INFO] ccse.views: TheBigBoss logged in and accessed admin panel.
+2024-12-22 18:57:37,868 [CRITICAL] ccse.views: TheBigBoss has had his role changed to moderator
+2024-12-22 19:02:53,928 [INFO] ccse.views: User johnjones deleted.
+2024-12-22 19:46:26,883 [INFO] ccse.views: guru successfully logged in

@@ -485,14 +485,20 @@ def delete_file(request):
                 context= {'users': userquery}
                 context2 = {'products': userproducts}
                 danjuma = stripe.Product.search(query=f"active:'true' AND name:'{userindex}'")
+                wooh = stripe.Price.search(query=f"product:'{userindex}'")
                 if danjuma.data:
                     identifier = danjuma.data[0].id  
+                    for p in wooh.data:
+                        stripe.Price.modify(p.id, active=False)
                     stripe.Product.delete(identifier)
+                    logger.info(f"Product {userindex} deleted.")
+                    context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product deleted.", 'orderquery':orders}
+                    return render(request, "adminpanel.html", context3)
                 else:
-                    pass
-                logger.info(f"Product {userindex} deleted.")
-                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product deleted.", 'orderquery':orders}
-                return render(request, "adminpanel.html", context3)
+                    logger.info(f"Deletion attempted by {username} but did not succeed.")
+                    context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Product not found.", 'orderquery':orders}
+                    return render(request, "adminpanel.html", context3)
+                
             elif role == "Logins":
                 db.Logins.delete_one({"username": userindex})
                 userquery = list(db.Logins.find({}))
@@ -509,6 +515,7 @@ def delete_file(request):
                 orders = list(db.Orders.find({}))
                 context= {'users': userquery}
                 context2 = {'products': userproducts}
+                logger.info(f"Deletion attempted by {username} but did not succeed.")
                 context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Element not found in the database.", 'orderquery':orders}
                 return render(request, "adminpanel.html", context3)
         else:
@@ -861,7 +868,7 @@ def basket(request):
         context3 = {"user_basket_count": equation}
         return render(request, "custlogin.html", context3)    
 
-    ###youtube tutorial tommorow
+    #
 
 def add_to_cart(request): 
     try:
@@ -918,7 +925,7 @@ def add_to_cart(request):
         context3 = {'productquery': context2, 'Update_Message': "No user logged in"}
         return render(request, "products.html")
 
-def payment(request): #were gonna do login logic here
+def payment(request): 
     try:
         username = request.session['username']
         basket = request.session['baskets'][username]
@@ -1223,14 +1230,14 @@ def add_stock(request):
         no = sanitise_input(data.get('stocknumber'))
         if db.Products.find_one({"productName": name}):
             result = db.Products.update_one({'productName': name},  
-            {'$inc': {'productStock': no}})
+            {'$inc': {'productStock': int(no)}})
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
             orderquery = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
             logger.info(f"Product {name} has had its stock increased by {no}.")
-            context3 = {'productquery': context2, 'userquery': context, 'username': name, 'Update_Message': f"Successfully added {no} to {name}!"}
+            context3 = {'productquery': context2, 'userquery': context, 'orderquery': orderquery, 'username': username2, 'Update_Message': f"Successfully added {no} to {name}!"}
             return render(request, "adminpanel.html", context3)
         else:
             userquery = list(db.Logins.find({}))
@@ -1238,7 +1245,7 @@ def add_stock(request):
             orderquery = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
-            context3 = {'productquery': context2, 'userquery': context, 'username': name, 'Update_Message': f"Product {name} not found!"}
+            context3 = {'productquery': context2, 'userquery': context, 'orderquery': orderquery, 'username': name, 'Update_Message': f"Product {name} not found!"}
             return render(request, "adminpanel.html", context3)
     else:
         return HttpResponse(status=403)
@@ -1258,24 +1265,27 @@ def change_role(request):
                 userproducts = list(db.Products.find({}))
                 context= {'users': userquery}
                 context2 = {'products': userproducts}
+                orders = list(db.Orders.find({}))
                 logger.critical(f"{username} has had his role changed to {role}")
-                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Successfully updated {userindex} to {role}"}
+                context3 = {'productquery': context2, 'orderquery': orders, 'userquery': context, 'username': username, 'Update_Message': f"Successfully updated {userindex} to {role}"}
                 return render(request, "adminpanel.html", context3)
             else:
                 userquery = list(db.Logins.find({}))
                 userproducts = list(db.Products.find({}))
                 context= {'users': userquery}
                 context2 = {'products': userproducts}
-                context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Username not found in the database."}
+                orders = list(db.Orders.find({}))
+                context3 = {'productquery': context2, 'orderquery': orders, 'userquery': context, 'username': username, 'Update_Message': f"Username not found in the database."}
                 return render(request, "adminpanel.html", context3)
         else:
             db = get_db()
             userquery = list(db.Logins.find({}))
             userproducts = list(db.Products.find({}))
+            orders = list(db.Orders.find({}))
             context= {'users': userquery}
             context2 = {'products': userproducts}
             logger.critical(f"{username} attempted to use moderator powers to make someone an admin. This is not allowed.")
-            context3 = {'productquery': context2, 'userquery': context, 'username': username, 'Update_Message': f"Moderators cannot change roles."}
+            context3 = {'productquery': context2, 'userquery': context, 'orderquery': orders, 'username': username, 'Update_Message': f"Moderators cannot change roles."}
             return render(request, "adminpanel.html", context3)
     else:
         logger.critical(f"{username} attempted to perform an action they were not authorised to do.")

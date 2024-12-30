@@ -27,7 +27,7 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'ccse.apps.CcseConfig',
     'web_project',
     'djongo',
-    'bootstrap5'
+    'bootstrap5',
+    "django_extensions"
 
 ]
 
@@ -161,8 +162,11 @@ LOGGING = {
 LOGIN_URL = '/login/'  # Redirect unauthenticated users to the login page
 LOGIN_REDIRECT_URL = '/'
 
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = True  # Allow session cookies to be sent over HTTP
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True  # Allow session cookies to be sent over HTTPs only
 CSRF_COOKIE_SECURE = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 1800

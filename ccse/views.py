@@ -410,7 +410,7 @@ def check_password(password):
         return False
 
 def get_db():
-    reciever = MongoClient("mongodb+srv://mongouser:BigBallsBouncing@cluster0.nfi83.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0") 
+    reciever = MongoClient("mongodb+srv://mongouser:BigBallsBouncing@cluster0.nfi83.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", tls=True) 
     return reciever['WashDB']
 
 def home(request): 

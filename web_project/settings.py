@@ -43,8 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ccse.apps.CcseConfig',
     'web_project',
-    'djongo',
-    'bootstrap5',
+    'django_bootstrap5',
     "django_extensions"
 
 ]
@@ -85,14 +84,6 @@ WSGI_APPLICATION = 'web_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'All',
-            'ENFORCE_SCHEMA': False,
-            'CLIENT': {
-                'host': 'mongodb+srv://mongouser:BigBallsBouncing@cluster0.nfi83.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
-            }  
-        },
 
     
 }           
@@ -161,8 +152,7 @@ LOGGING = {
 
 LOGIN_URL = '/login/'  # Redirect unauthenticated users to the login page
 LOGIN_REDIRECT_URL = '/'
-
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True

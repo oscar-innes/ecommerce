@@ -16,7 +16,6 @@ from Crypto.Cipher import AES
 import base64
 from django.template.response import TemplateResponse
 import binascii
-from bson import Binary
 import logging
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout 
@@ -136,8 +135,8 @@ def forgot_pass(request):
             vector = k.get("vector")
             generated_code = random.randint(100000000000, 999999999999)   #create a random code
             if email == email_to_decrypt:
-                sg = sendgrid.SendGridAPIClient(os.environ.get("SENDGRID_API_KEY")  #fetch the api key to communicate with the api to actually send the email.
-                )
+                sg = sendgrid.SendGridAPIClient(os.getenv("SENDGRID_API_KEY")  #fetch the api key to communicate with the api to actually send the email.
+                )                
                 from_email = From("innesoscar@gmail.com")
                 to_email = To(fix_email(email))
                 subject = f"Code for account {username}"  # build the components of an email message that allows the code to be sent to the users email.
@@ -410,7 +409,7 @@ def check_password(password):
         return False
 
 def get_db():
-    reciever = MongoClient("mongodb+srv://mongouser:BigBallsBouncing@cluster0.nfi83.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", tls=True) 
+    reciever = MongoClient(os.environ.get("MONGO_SECURECART"), tls=True) 
     return reciever['WashDB']  #create a reciever object that communicates with the database in a secure TLS channel.
 
 def home(request): 

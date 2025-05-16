@@ -1,3 +1,4 @@
 securecartcert.pem
 securecartkey.pem
 .venv
+.env

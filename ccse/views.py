@@ -409,7 +409,7 @@ def check_password(password):
         return False
 
 def get_db():
-    reciever = MongoClient(os.environ.get("MONGO_SECURECART"), tls=True) 
+    reciever = MongoClient(os.getenv("MONGO_SECURECART"), tls=True) 
     return reciever['WashDB']  #create a reciever object that communicates with the database in a secure TLS channel.
 
 def home(request): 

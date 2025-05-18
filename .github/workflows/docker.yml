@@ -73,11 +73,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/snyk@v1
+        uses: snyk/actions/python@v1
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: test
 
   dockersecurityscan:
     needs: [security,zap_scan,test]

@@ -94,7 +94,7 @@ jobs:
 
 
   dockersecurityscan:
-    needs: security,analyze,zap_scan
+    needs: [security,analyze,zap_scan]
     runs-on: ubuntu-latest
 
     env:

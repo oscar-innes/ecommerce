@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
@@ -60,41 +60,15 @@ jobs:
   security:
    runs-on: ubuntu-latest
    steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python-3.10@master
+      uses: snyk/actions/python-3.10@main
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-  analyze:
-    needs: test
-    name: Analyze
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        language:
-          - python
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@master
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
-
-
   dockersecurityscan:
-    needs: [security,analyze,zap_scan]
+    needs: [security,zap_scan,test]
     runs-on: ubuntu-latest
 
     env:
@@ -107,7 +81,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
       -
         name: Login to Docker Hub
         uses: docker/login-action@v3

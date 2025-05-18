@@ -75,7 +75,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:9001",
-    "localhost:9001"
+    "http://localhost:9001"
 ]
 
 ROOT_URLCONF = 'web_project.urls'

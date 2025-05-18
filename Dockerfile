@@ -21,4 +21,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 9001/tcp
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --spider --quiet http://localhost:9001 || exit 1
+
 CMD ["python", "manage.py", "runserver", "localhost:9001"]

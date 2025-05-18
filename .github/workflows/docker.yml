@@ -60,10 +60,9 @@ jobs:
   security:
    runs-on: ubuntu-latest
    steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@master
     - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python-3.10@main
-      continue-on-error: true
+      uses: snyk/actions/python-3.10@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 

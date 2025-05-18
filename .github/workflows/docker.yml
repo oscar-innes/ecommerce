@@ -58,15 +58,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   security:
-   runs-on: ubuntu-latest
-   steps:
-    - uses: actions/checkout@master
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python-3.10@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@v1
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/snyk@v1
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: test
 
   dockersecurityscan:
     needs: [security,zap_scan,test]

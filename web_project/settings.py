@@ -55,6 +55,7 @@ CONTENT_SECURITY_POLICY = {
         'style-src': ("'self'", "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"),
         'script-src': ("'self'", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"),
         'frame-ancestors': ("'none'",),
+        'form-action': ("'self'",),
         'object-src': ("'none'",),
     }
 }
@@ -70,6 +71,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:9001",
+    "localhost:9001"
 ]
 
 ROOT_URLCONF = 'web_project.urls'

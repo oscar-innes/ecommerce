@@ -49,21 +49,11 @@ INSTALLED_APPS = [
     'csp'
 
 ]
-CONTENT_SECURITY_POLICY = {
-    'DIRECTIVES': {
-        'default-src': ("'self'",),
-        'style-src': ("'self'", "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"),
-        'script-src': ("'self'", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"),
-        'frame-ancestors': ("'none'",),
-        'form-action': ("'self'",),
-        'object-src': ("'none'",),
-    }
-}
-ALLOWED_HOSTS=['*'] #this just allows access from all the sites pages (as seen in template), NOT EVERY USER USING THE WEBSITE
+
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'csp.middleware.CSPMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,10 +63,36 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+CONTENT_SECURITY_POLICY = {
+    'DIRECTIVES': {
+        'default-src': ["'self'"],
+        'img-src': ["'self'"],
+        'script-src': [
+            "'self'",
+            "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        ],
+        'style-src': [
+            "'self'",
+            "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        ],
+        'connect-src': ["'self'"],
+        'form-action': ["'self'"],
+        'frame-ancestors': ["'self'"],
+        'upgrade-insecure-requests': True,
+    }
+}
+
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:9001",
     "http://localhost:9001"
 ]
+
+CORS_ALLOW_CREDENTIALS = False
+
+
 
 ROOT_URLCONF = 'web_project.urls'
 
@@ -189,7 +205,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 
 # Default primary key field type

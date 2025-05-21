@@ -36,6 +36,10 @@ from django.views.generic.base import TemplateView
 from django.conf import settings
 import traceback
 
+
+
+
+
 def card_check(sort_code, account_no, cvv, date):
     acc2 = int(account_no)
     reggie = r'^[1-9]{2}\s?\-?[1-9]{2}\s?\-?[1-9]{2}$' #regex pattern checks that the sort code is of the appropriate length with '-' between every two numbers.
